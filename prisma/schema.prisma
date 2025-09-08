@@ -1,0 +1,169 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String     @id @default(uuid())
+  created_at    DateTime   @default(now())
+  created_by    String?
+  email         String     @unique
+  first_name    String?
+  last_name     String?
+  new_email     String?
+  old_passwords String[]   @default([])
+  password      String?
+  phone_number  String?
+  status        UserStatus @default(unverified)
+  updated_at    DateTime   @updatedAt
+
+  auth_tokens            AuthToken[]
+  created_permissions    Permission[]     @relation("CreatedBy")
+  created_role_permissions RolePermission[] @relation("CreatedBy")
+  created_roles          Role[]           @relation("CreatedBy")
+  role_users             RoleUser[]
+  verification_tokens    VerificationToken[]
+
+  @@map("users")
+}
+
+enum UserStatus {
+  active
+  inactive
+  invited
+  unverified
+}
+
+model Role {
+  id         String   @id @default(uuid())
+  created_at DateTime @default(now())
+  created_by String?
+  name       RoleName @unique
+  updated_at DateTime @updatedAt
+
+  creator          User?             @relation("CreatedBy", fields: [created_by], references: [id])
+  role_permissions RolePermission[]
+  role_users       RoleUser[]
+
+  @@map("roles")
+}
+
+enum RoleName {
+  admin
+  developer
+  moderator
+  user
+}
+
+model Permission {
+  id         String           @id @default(uuid())
+  action     PermissionAction
+  created_at DateTime         @default(now())
+  created_by String?
+  module     PermissionModule
+  updated_at DateTime         @updatedAt
+
+  creator          User?             @relation("CreatedBy", fields: [created_by], references: [id])
+  role_permissions RolePermission[]
+
+  @@unique([action, module])
+  @@map("permissions")
+}
+
+enum PermissionAction {
+  create
+  read
+  update
+  delete
+}
+
+enum PermissionModule {
+  permission
+  role
+  role_permission
+  role_user
+  user
+}
+
+model RoleUser {
+  id      String @id @default(uuid())
+  role_id String
+  user_id String
+
+  role Role @relation(fields: [role_id], references: [id], onDelete: Cascade)
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([user_id, role_id])
+  @@map("role_users")
+}
+
+model RolePermission {
+  id            String   @id @default(uuid())
+  created_at    DateTime @default(now())
+  created_by    String?
+  permission_id String
+  role_id       String
+  updated_at    DateTime @updatedAt
+
+  creator    User?      @relation("CreatedBy", fields: [created_by], references: [id])
+  permission Permission @relation(fields: [permission_id], references: [id], onDelete: Cascade)
+  role       Role       @relation(fields: [role_id], references: [id], onDelete: Cascade)
+
+  @@unique([role_id, permission_id])
+  @@map("role_permissions")
+}
+
+model AuthToken {
+  id         String   @id @default(uuid())
+  created_at DateTime @default(now())
+  expired_at DateTime
+  token      String   @unique
+  updated_at DateTime @updatedAt
+  user_id    String
+
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@map("auth_tokens")
+}
+
+model VerificationToken {
+  id         String      @id @default(uuid())
+  created_at DateTime    @default(now())
+  email      String
+  expired_at DateTime
+  status     TokenStatus @default(unverified)
+  token      String      @unique
+  type       TokenType
+  updated_at DateTime    @updatedAt
+  user_id    String
+
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@map("verification_tokens")
+}
+
+enum TokenType {
+  user_verification
+  forgot_password
+}
+
+enum TokenStatus {
+  unverified
+  verified
+  cancelled
+}
+
+model AuthTemplate {
+  id         String   @id @default(uuid())
+  body       String
+  created_at DateTime @default(now())
+  event      String   @unique
+  subject    String
+  updated_at DateTime @updatedAt
+
+  @@map("auth_templates")
+}
