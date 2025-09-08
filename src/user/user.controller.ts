@@ -1,7 +1,6 @@
-import { Body, Controller, Delete, Get, Headers, Param, Patch, Post, UseMiddleware } from '@nestjs/common'
+import { Body, Controller, Delete, Get, Headers, Param, Patch, Post } from '@nestjs/common'
 
 import { User } from '@/decorators/user.decorator'
-import { AuthMiddleware } from '@/middleware/auth.middleware'
 import {
   ChangeEmailDto,
   ChangePasswordDto,
@@ -52,21 +51,21 @@ export class UserController {
   }
 
   @Get('me')
-  @UseMiddleware(AuthMiddleware)
   getMe(@User('user_id') userId: string) {
+    // TODO: Add AuthGuard
     return this.userService.getMe(userId)
   }
 
   @Post('logout')
-  @UseMiddleware(AuthMiddleware)
   logout(@Headers('authorization') authorization: string) {
+    // TODO: Add AuthGuard
     const token = authorization?.replace('Bearer ', '')
     return this.userService.logout(token)
   }
 
   @Post('change-email')
-  @UseMiddleware(AuthMiddleware)
   changeEmail(@Body() changeEmailDto: ChangeEmailDto, @User('user_id') userId: string) {
+    // TODO: Add AuthGuard
     return this.userService.changeEmail(changeEmailDto, userId)
   }
 
@@ -76,8 +75,8 @@ export class UserController {
   }
 
   @Post('verify-change-email')
-  @UseMiddleware(AuthMiddleware)
   verifyChangeEmail(@Body() verifyChangeEmailDto: VerifyChangeEmailDto, @User('user_id') userId: string) {
+    // TODO: Add AuthGuard
     return this.userService.verifyChangeEmail(verifyChangeEmailDto, userId)
   }
 
@@ -87,8 +86,8 @@ export class UserController {
   }
 
   @Post('change-password')
-  @UseMiddleware(AuthMiddleware)
   changePassword(@Body() changePasswordDto: ChangePasswordDto, @User('user_id') userId: string) {
+    // TODO: Add AuthGuard
     return this.userService.changePassword(changePasswordDto, userId)
   }
 
@@ -118,8 +117,8 @@ export class UserController {
   }
 
   @Post('verify-user-password')
-  @UseMiddleware(AuthMiddleware)
   verifyUserPassword(@Body() verifyUserPasswordDto: VerifyUserPasswordDto, @User('user_id') userId: string) {
+    // TODO: Add AuthGuard
     return this.userService.verifyUserPassword(verifyUserPasswordDto, userId)
   }
 

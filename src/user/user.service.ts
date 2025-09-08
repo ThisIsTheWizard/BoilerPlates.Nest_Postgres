@@ -96,7 +96,7 @@ export class UserService {
       }
     })
 
-    if (!user || !(await this.commonService.comparePassword(loginDto.password, user.password))) {
+    if (!user || !user.password || !(await this.commonService.comparePassword(loginDto.password, user.password))) {
       throw new Error('Invalid credentials')
     }
 
@@ -292,7 +292,7 @@ export class UserService {
     await this.prisma.user.update({
       where: { id: userId },
       data: {
-        email: user.new_email,
+        email: user.new_email!,
         new_email: null
       }
     })
@@ -300,11 +300,14 @@ export class UserService {
     await this.verificationTokenService.updateVerificationToken(verificationToken.id, { status: 'verified' })
 
     const updatedUser = await this.prisma.user.findUnique({ where: { id: userId } })
+    if (!updatedUser) {
+      throw new Error('USER_NOT_FOUND')
+    }
     return {
       id: updatedUser.id,
       email: updatedUser.email,
-      first_name: updatedUser.first_name,
-      last_name: updatedUser.last_name,
+      first_name: updatedUser.first_name || undefined,
+      last_name: updatedUser.last_name || undefined,
       status: updatedUser.status
     }
   }
@@ -347,6 +350,9 @@ export class UserService {
       throw new Error(`USER_IS_${user.status.toUpperCase()}`)
     }
 
+    if (!user.password) {
+      throw new Error('USER_PASSWORD_NOT_SET')
+    }
     const isOldPasswordCorrect = await this.commonService.comparePassword(old_password, user.password)
     if (!isOldPasswordCorrect) {
       throw new Error('OLD_PASSWORD_IS_INCORRECT')
@@ -361,7 +367,7 @@ export class UserService {
     }
 
     const hashedNewPassword = await this.commonService.hashPassword(new_password)
-    const updatedOldPasswords = [...oldPasswords.slice(-2), user.password]
+    const updatedOldPasswords = [...(oldPasswords.filter(p => p !== null) as string[]).slice(-2), user.password!]
 
     await this.prisma.user.update({
       where: { id: userId },
@@ -469,6 +475,9 @@ export class UserService {
       throw new Error(`USER_IS_${user.status.toUpperCase()}`)
     }
 
+    if (!user.password) {
+      throw new Error('USER_PASSWORD_NOT_SET')
+    }
     const isPasswordCorrect = await this.commonService.comparePassword(password, user.password)
 
     return {

@@ -5,7 +5,7 @@ import { Injectable } from '@nestjs/common'
 export class VerificationTokenService {
   constructor(private prisma: PrismaService) {}
 
-  async createVerificationToken(data: {
+  async createVerificationTokenWithToken(data: {
     email: string
     token: string
     type: 'user_verification' | 'forgot_password'
@@ -17,26 +17,26 @@ export class VerificationTokenService {
 
   async findVerificationToken(email: string, token: string, type: string) {
     return this.prisma.verificationToken.findFirst({
-      where: { email, token, type, status: 'unverified' }
+      where: { email, token, type: type as any, status: 'unverified' as any }
     })
   }
 
   async updateVerificationToken(id: string, data: { status: string }) {
     return this.prisma.verificationToken.update({
       where: { id },
-      data
+      data: { status: data.status as any }
     })
   }
 
   async deleteVerificationTokens(userId: string, email: string, type: string) {
     return this.prisma.verificationToken.deleteMany({
-      where: { user_id: userId, email, type }
+      where: { user_id: userId, email, type: type as any }
     })
   }
 
   async cancelVerificationTokens(userId: string, type: string) {
     return this.prisma.verificationToken.updateMany({
-      where: { user_id: userId, type, status: 'unverified' },
+      where: { user_id: userId, type: type as any, status: 'unverified' as any },
       data: { status: 'cancelled' }
     })
   }
@@ -61,7 +61,7 @@ export class VerificationTokenService {
 
   async findVerificationTokenByUserId(userId: string, token: string, type: string) {
     return this.prisma.verificationToken.findFirst({
-      where: { user_id: userId, token, type, status: 'unverified' }
+      where: { user_id: userId, token, type: type as any, status: 'unverified' as any }
     })
   }
 }

@@ -2,6 +2,9 @@ FROM node:20-slim
 
 LABEL org.opencontainers.image.authors="Elias Shekh"
 
+# Install OpenSSL for Prisma
+RUN apt-get update -y && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
+
 WORKDIR /app
 
 COPY package.json .

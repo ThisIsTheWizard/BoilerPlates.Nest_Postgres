@@ -9,18 +9,13 @@ export class CommonService {
   constructor(private configService: ConfigService) {}
 
   generateJWTToken(payload: object, isRefreshToken = false): string {
-    const expiresIn = isRefreshToken
-      ? this.configService.get<string>('REFRESH_TOKEN_EXPIRY', '7d')
-      : this.configService.get<string>('ACCESS_TOKEN_EXPIRY', '1d')
-
-    return jwt.sign(payload, this.configService.get<string>('JWT_SECRET'), {
-      expiresIn,
-      issuer: this.configService.get<string>('JWT_ISSUER')
-    })
+    const secret = this.configService.get<string>('JWT_SECRET', '')
+    const expiresIn = isRefreshToken ? '7d' : '1h'
+    return jwt.sign(payload, secret, { expiresIn })
   }
 
   verifyJWTToken(token: string): jwt.JwtPayload | string {
-    return jwt.verify(token, this.configService.get<string>('JWT_SECRET'))
+    return jwt.verify(token, this.configService.get<string>('JWT_SECRET', ''))
   }
 
   decodeJWTToken(token: string): jwt.JwtPayload | string | null {

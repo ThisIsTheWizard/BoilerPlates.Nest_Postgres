@@ -1,13 +1,13 @@
 export interface LoginResponse {
-  user: UserResponse
+  user: any
   token: string
 }
 
 export interface UserResponse {
   id: string
   email: string
-  first_name?: string
-  last_name?: string
+  first_name?: string | null
+  last_name?: string | null
   status?: string
 }
 

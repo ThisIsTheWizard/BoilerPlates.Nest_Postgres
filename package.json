@@ -6,7 +6,7 @@
   "author": "The Wizard",
   "license": "MIT",
   "scripts": {
-    "build": "nest build --outDir build",
+    "build": "nest build",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev",
@@ -21,6 +21,7 @@
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",
+    "@nestjs/config": "^4.0.2",
     "@nestjs/core": "^11.0.1",
     "@nestjs/platform-express": "^11.0.1",
     "@prisma/client": "^5.22.0",
