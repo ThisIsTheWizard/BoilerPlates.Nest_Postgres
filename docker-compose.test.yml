@@ -3,11 +3,32 @@ services:
     image: postgres:17
     container_name: postgres_test_container
     env_file:
-      - .env
+      - .env.test
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres']
+      interval: 5s
+      timeout: 5s
+      retries: 5
     ports:
       - '5432:5432'
     volumes:
       - postgres_test_data:/var/lib/postgresql/data
 
+  node_server_test:
+    build:
+      context: .
+      dockerfile: Dockerfile.Test
+    command: pnpm run jest
+    container_name: node_server_test_container
+    depends_on:
+      postgres_test:
+        condition: service_healthy
+    env_file:
+      - .env.test
+    volumes:
+      - node_server_test_data:/app
+      - /app/node_modules
+
 volumes:
+  node_server_test_data:
   postgres_test_data:

@@ -7,6 +7,11 @@
   "license": "MIT",
   "scripts": {
     "build": "nest build",
+    "compose:test-down": "docker-compose -f docker-compose.test.yml down -v",
+    "compose:dev-down": "docker-compose -f docker-compose.dev.yml down -v",
+    "compose:dev-up": "docker-compose -f docker-compose.dev.yml up --build",
+    "compose:prod-up": "docker-compose -f docker-compose.prod.yml up --build",
+    "compose:test-run": "docker-compose -f docker-compose.test.yml run --rm node_server_test",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev",
@@ -14,10 +19,11 @@
     "db:studio": "prisma studio",
     "dev": "nest start --watch",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
+    "jest": "jest",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\"",
     "lint-fix": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
-    "pretest": "docker-compose -f docker-compose.test.yml down -v && docker-compose -f docker-compose.test.yml up -d && sleep 10",
-    "test": "jest"
+    "posttest": "pnpm run compose:test-down",
+    "test": "pnpm run compose:test-run"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",

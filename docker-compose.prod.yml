@@ -4,6 +4,11 @@ services:
     container_name: postgres_container
     env_file:
       - .env
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres']
+      interval: 5s
+      timeout: 5s
+      retries: 5
     ports:
       - '5432:5432'
     volumes:
@@ -18,25 +23,28 @@ services:
     ports:
       - '4000:80'
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
     volumes:
       - pgadmin_data:/var/lib/pgadmin
 
   node_server:
     build:
       context: .
-      dockerfile: ${DOCKERFILE:-Dockerfile}
-    container_name: server_container
+      dockerfile: Dockerfile.Prod
+    container_name: node_server_container
     ports:
       - '8000:8000'
     env_file:
       - .env
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
     volumes:
-      - .:/app
+      - node_server_data:/app
       - /app/node_modules
 
 volumes:
+  node_server_data:
   postgres_data:
   pgadmin_data:

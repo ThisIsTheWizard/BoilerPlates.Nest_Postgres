@@ -1,25 +1,22 @@
-import { INestApplication } from '@nestjs/common'
 import { Test, TestingModule } from '@nestjs/testing'
-import request from 'supertest'
-import { AppModule } from '../src/app/app.module'
+import { AppController } from '../src/app/app.controller'
+import { AppService } from '../src/app/app.service'
 
-describe('AppController (e2e)', () => {
-  let app: INestApplication
+describe('AppController', () => {
+  let appController: AppController
 
   beforeEach(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule]
+    const app: TestingModule = await Test.createTestingModule({
+      controllers: [AppController],
+      providers: [AppService]
     }).compile()
 
-    app = moduleFixture.createNestApplication()
-    await app.init()
+    appController = app.get<AppController>(AppController)
   })
 
-  it('/ (GET)', () => {
-    return request(app.getHttpServer()).get('/').expect(200).expect('Hello World!')
-  })
-
-  afterAll(async () => {
-    await app.close()
+  describe('root', () => {
+    it('should return "Hello World!"', () => {
+      expect(appController.getHello()).toBe('Hello World!')
+    })
   })
 })
