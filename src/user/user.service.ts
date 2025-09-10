@@ -367,7 +367,7 @@ export class UserService {
     }
 
     const hashedNewPassword = await this.commonService.hashPassword(new_password)
-    const updatedOldPasswords = [...(oldPasswords.filter(p => p !== null) as string[]).slice(-2), user.password!]
+    const updatedOldPasswords = [...(oldPasswords.filter((p) => p !== null) as string[]).slice(-2), user.password!]
 
     await this.prisma.user.update({
       where: { id: userId },

@@ -23,7 +23,8 @@ export class CommonService {
   }
 
   async hashPassword(password: string): Promise<string> {
-    return bcrypt.hash(password, this.configService.get<number>('BCRYPT_ROUNDS', 10))
+    const rounds = parseInt(this.configService.get<string>('BCRYPT_ROUNDS', '10'), 10)
+    return bcrypt.hash(password, rounds)
   }
 
   async comparePassword(password: string, hash: string): Promise<boolean> {

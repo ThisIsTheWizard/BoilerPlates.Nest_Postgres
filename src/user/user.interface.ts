@@ -1,5 +1,5 @@
 export interface LoginResponse {
-  user: any
+  user: UserResponse
   token: string
 }
 

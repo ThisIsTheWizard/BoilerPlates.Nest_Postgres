@@ -8,6 +8,7 @@ module.exports = {
   setupFilesAfterEnv: ['<rootDir>/test/setup.ts'],
   testEnvironment: 'node',
   testMatch: ['**/*.test.ts'],
+  testTimeout: 60000,
   transform: {
     '^.+\\.(t|j)s$': 'ts-jest'
   }

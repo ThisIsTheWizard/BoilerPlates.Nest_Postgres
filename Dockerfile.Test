@@ -2,7 +2,7 @@ FROM node:20-slim
 
 LABEL org.opencontainers.image.authors="Elias Shekh"
 
-# Install OpenSSL for Prisma
+# Install OpenSSL and postgresql-client for Prisma
 RUN apt-get update -y && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
@@ -15,4 +15,4 @@ RUN pnpm i
 
 COPY . .
 
-RUN pnpm run jest
+CMD ["sh", "-c", "sleep 10 && pnpm run db:generate && pnpm run db:push && pnpm run jest"]

@@ -15,28 +15,28 @@ export class VerificationTokenService {
     return this.prisma.verificationToken.create({ data })
   }
 
-  async findVerificationToken(email: string, token: string, type: string) {
+  async findVerificationToken(email: string, token: string, type: 'user_verification' | 'forgot_password') {
     return this.prisma.verificationToken.findFirst({
-      where: { email, token, type: type as any, status: 'unverified' as any }
+      where: { email, token, type, status: 'unverified' }
     })
   }
 
-  async updateVerificationToken(id: string, data: { status: string }) {
+  async updateVerificationToken(id: string, data: { status: 'unverified' | 'verified' | 'cancelled' }) {
     return this.prisma.verificationToken.update({
       where: { id },
-      data: { status: data.status as any }
+      data: { status: data.status }
     })
   }
 
-  async deleteVerificationTokens(userId: string, email: string, type: string) {
+  async deleteVerificationTokens(userId: string, email: string, type: 'user_verification' | 'forgot_password') {
     return this.prisma.verificationToken.deleteMany({
-      where: { user_id: userId, email, type: type as any }
+      where: { user_id: userId, email, type }
     })
   }
 
-  async cancelVerificationTokens(userId: string, type: string) {
+  async cancelVerificationTokens(userId: string, type: 'user_verification' | 'forgot_password') {
     return this.prisma.verificationToken.updateMany({
-      where: { user_id: userId, type: type as any, status: 'unverified' as any },
+      where: { user_id: userId, type, status: 'unverified' },
       data: { status: 'cancelled' }
     })
   }
@@ -59,9 +59,9 @@ export class VerificationTokenService {
     })
   }
 
-  async findVerificationTokenByUserId(userId: string, token: string, type: string) {
+  async findVerificationTokenByUserId(userId: string, token: string, type: 'user_verification' | 'forgot_password') {
     return this.prisma.verificationToken.findFirst({
-      where: { user_id: userId, token, type: type as any, status: 'unverified' as any }
+      where: { user_id: userId, token, type, status: 'unverified' }
     })
   }
 }
