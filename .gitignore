@@ -55,6 +55,7 @@ pids
 # Package lock files
 package-lock.json
 pnpm-lock.json
+pnpm-lock.yaml
 yarn.lock
 
 # Diagnostic reports (https://nodejs.org/api/report.html)
