@@ -6,11 +6,12 @@ import { AppService } from '@/app/app.service'
 import { PermissionModule } from '@/permission/permission.module'
 import { PrismaService } from '@/prisma/prisma.service'
 import { RoleModule } from '@/role/role.module'
+import { TestController } from '@/test/test.controller'
 import { UserModule } from '@/user/user.module'
 
 @Module({
   imports: [ConfigModule.forRoot({ isGlobal: true }), UserModule, RoleModule, PermissionModule],
-  controllers: [AppController],
+  controllers: [AppController, TestController],
   providers: [AppService, PrismaService]
 })
 export class AppModule {}

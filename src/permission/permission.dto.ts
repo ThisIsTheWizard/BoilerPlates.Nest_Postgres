@@ -1,11 +1,12 @@
-import { IsOptional, IsString } from 'class-validator'
+import { IsEnum, IsOptional, IsString } from 'class-validator'
+import { PermissionAction, PermissionModule } from '@prisma/client'
 
 export class CreatePermissionDto {
-  @IsString()
-  action: 'create' | 'read' | 'update' | 'delete'
+  @IsEnum(PermissionAction)
+  action: PermissionAction
 
-  @IsString()
-  module: 'permission' | 'role' | 'role_permission' | 'role_user' | 'user'
+  @IsEnum(PermissionModule)
+  module: PermissionModule
 
   @IsOptional()
   @IsString()
@@ -14,10 +15,10 @@ export class CreatePermissionDto {
 
 export class UpdatePermissionDto {
   @IsOptional()
-  @IsString()
-  action?: 'create' | 'read' | 'update' | 'delete'
+  @IsEnum(PermissionAction)
+  action?: PermissionAction
 
   @IsOptional()
-  @IsString()
-  module?: 'permission' | 'role' | 'role_permission' | 'role_user' | 'user'
+  @IsEnum(PermissionModule)
+  module?: PermissionModule
 }

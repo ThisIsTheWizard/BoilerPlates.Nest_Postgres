@@ -1,7 +1,8 @@
-import { Injectable } from '@nestjs/common'
+import { Injectable, NotFoundException } from '@nestjs/common'
+import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library'
 
-import { PrismaService } from '@/prisma/prisma.service'
-import { CreateRoleDto, UpdateRoleDto } from '@/role/role.dto'
+import { PrismaService } from '../prisma/prisma.service'
+import { CreateRoleDto, UpdateRoleDto } from './role.dto'
 
 @Injectable()
 export class RoleService {
@@ -21,20 +22,46 @@ export class RoleService {
   }
 
   async findOne(id: string) {
-    return this.prisma.role.findUnique({
+    const role = await this.prisma.role.findUnique({
       where: { id },
       include: {
         role_users: { include: { user: true } },
         role_permissions: { include: { permission: true } }
       }
     })
+    if (!role) {
+      throw new NotFoundException('Role not found')
+    }
+
+    return role
   }
 
   async update(id: string, data: UpdateRoleDto) {
-    return this.prisma.role.update({ where: { id }, data })
+    try {
+      return this.prisma.role.update({ where: { id }, data })
+    } catch (error) {
+      if (error instanceof PrismaClientKnownRequestError && error.code === 'P2025') {
+        throw new NotFoundException('Role not found')
+      }
+      throw error
+    }
+  }
+
+  async seedSystemRoles() {
+    return this.prisma.role.createMany({
+      data: [{ name: 'admin' }, { name: 'developer' }, { name: 'moderator' }, { name: 'user' }],
+      skipDuplicates: true
+    })
   }
 
   async remove(id: string) {
-    return this.prisma.role.delete({ where: { id } })
+    try {
+      return this.prisma.role.delete({ where: { id } })
+    } catch (error) {
+      if (error instanceof PrismaClientKnownRequestError && error.code === 'P2025') {
+        throw new NotFoundException('Role not found')
+      }
+      throw error
+    }
   }
 }

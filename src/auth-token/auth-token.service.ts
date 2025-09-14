@@ -1,5 +1,7 @@
-import { PrismaService } from '@/prisma/prisma.service'
-import { Injectable } from '@nestjs/common'
+import { Injectable, NotFoundException } from '@nestjs/common'
+import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library'
+
+import { PrismaService } from '../prisma/prisma.service'
 
 @Injectable()
 export class AuthTokenService {
@@ -18,9 +20,16 @@ export class AuthTokenService {
   }
 
   async revokeAuthToken(token: string) {
-    return this.prisma.authToken.delete({
-      where: { token }
-    })
+    try {
+      return this.prisma.authToken.delete({
+        where: { token }
+      })
+    } catch (error) {
+      if (error instanceof PrismaClientKnownRequestError && error.code === 'P2025') {
+        throw new NotFoundException('Token not found')
+      }
+      throw error
+    }
   }
 
   async verifyAuthToken(token: string) {

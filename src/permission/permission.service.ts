@@ -1,4 +1,5 @@
-import { Injectable } from '@nestjs/common'
+import { Injectable, NotFoundException } from '@nestjs/common'
+import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library'
 
 import { CreatePermissionDto, UpdatePermissionDto } from '@/permission/permission.dto'
 import { PrismaService } from '@/prisma/prisma.service'
@@ -16,14 +17,33 @@ export class PermissionService {
   }
 
   async findOne(id: string) {
-    return this.prisma.permission.findUnique({ where: { id } })
+    const permission = await this.prisma.permission.findUnique({ where: { id } })
+    if (!permission) {
+      throw new NotFoundException('Permission not found')
+    }
+
+    return permission
   }
 
   async update(id: string, data: UpdatePermissionDto) {
-    return this.prisma.permission.update({ where: { id }, data })
+    try {
+      return await this.prisma.permission.update({ where: { id }, data })
+    } catch (error) {
+      if (error instanceof PrismaClientKnownRequestError && error.code === 'P2025') {
+        throw new NotFoundException('Permission not found')
+      }
+      throw error
+    }
   }
 
   async remove(id: string) {
-    return this.prisma.permission.delete({ where: { id } })
+    try {
+      return await this.prisma.permission.delete({ where: { id } })
+    } catch (error) {
+      if (error instanceof PrismaClientKnownRequestError && error.code === 'P2025') {
+        throw new NotFoundException('Permission not found')
+      }
+      throw error
+    }
   }
 }

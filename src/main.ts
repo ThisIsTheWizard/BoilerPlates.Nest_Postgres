@@ -3,7 +3,7 @@ import { NestFactory } from '@nestjs/core'
 import 'dotenv/config'
 import { flatMap } from 'lodash'
 
-import { AppModule } from '@/app/app.module'
+import { AppModule } from './app/app.module'
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule)

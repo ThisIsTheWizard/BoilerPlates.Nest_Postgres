@@ -15,6 +15,6 @@ RUN pnpm i
 
 COPY . .
 
-CMD ["npm", "run", "dev"]
+CMD ["sh", "-c", "pnpm run db:generate && pnpm run db:push && pnpm run dev"]
 
 EXPOSE 8000

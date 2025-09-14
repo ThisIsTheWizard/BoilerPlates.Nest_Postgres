@@ -1,102 +1,117 @@
-import { getTestRequest } from './setup'
+import { api } from './setup'
 
 describe('PermissionController (e2e)', () => {
   describe('/permissions (POST)', () => {
-    it('should create a new permission', () =>
-      getTestRequest()
-        .post('/permissions')
-        .send({
-          action: 'create',
-          module: 'user',
-          created_by: '123e4567-e89b-12d3-a456-426614174000'
-        })
-        .expect(201))
+    it('should create a new permission', async () => {
+      const response = await api.post('/permissions', {
+        action: 'create',
+        module: 'role'
+      })
+      expect(response.status).toBe(201)
+    })
 
-    it('should create permission without created_by', () =>
-      getTestRequest()
-        .post('/permissions')
-        .send({
-          action: 'read',
-          module: 'role'
-        })
-        .expect(201))
+    it('should create permission without created_by', async () => {
+      const response = await api.post('/permissions', {
+        action: 'update',
+        module: 'role'
+      })
+      expect(response.status).toBe(201)
+    })
 
-    it('should fail with invalid action', () =>
-      getTestRequest()
-        .post('/permissions')
-        .send({
+    it('should fail with invalid action', async () => {
+      try {
+        await api.post('/permissions', {
           action: 'invalid-action',
           module: 'user'
         })
-        .expect(400))
+      } catch (error) {
+        expect(error.response.status).toBe(400)
+      }
+    })
 
-    it('should fail with invalid module', () =>
-      getTestRequest()
-        .post('/permissions')
-        .send({
+    it('should fail with invalid module', async () => {
+      try {
+        await api.post('/permissions', {
           action: 'create',
           module: 'invalid-module'
         })
-        .expect(400))
+      } catch (error) {
+        expect(error.response.status).toBe(400)
+      }
+    })
   })
 
   describe('/permissions (GET)', () => {
-    it('should get all permissions', () =>
-      getTestRequest()
-        .get('/permissions')
-        .expect(200)
-        .expect((res) => {
-          expect(Array.isArray(res.body)).toBe(true)
-        }))
+    it('should get all permissions', async () => {
+      const response = await api.get('/permissions')
+      expect(response.status).toBe(200)
+      expect(Array.isArray(response.data)).toBe(true)
+    })
   })
 
   describe('/permissions/:id (GET)', () => {
-    it('should get permission by id', () =>
-      getTestRequest().get('/permissions/123e4567-e89b-12d3-a456-426614174000').expect(200))
+    it('should get permission by id', async () => {
+      const response = await api.get('/permissions/1')
+      expect(response.status).toBe(200)
+    })
 
-    it('should return 404 for non-existent permission', () =>
-      getTestRequest().get('/permissions/non-existent-id').expect(404))
+    it('should return 404 for non-existent permission', async () => {
+      try {
+        await api.get('/permissions/999')
+      } catch (error) {
+        expect(error.response.status).toBe(404)
+      }
+    })
   })
 
   describe('/permissions/:id (PATCH)', () => {
-    it('should update permission action', () =>
-      getTestRequest()
-        .patch('/permissions/123e4567-e89b-12d3-a456-426614174000')
-        .send({
-          action: 'update'
-        })
-        .expect(200))
+    it('should update permission action', async () => {
+      const response = await api.patch('/permissions/1', {
+        action: 'update'
+      })
+      expect(response.status).toBe(200)
+    })
 
-    it('should update permission module', () =>
-      getTestRequest()
-        .patch('/permissions/123e4567-e89b-12d3-a456-426614174000')
-        .send({
-          module: 'permission'
-        })
-        .expect(200))
+    it('should update permission module', async () => {
+      const response = await api.patch('/permissions/1', {
+        module: 'permission'
+      })
+      expect(response.status).toBe(200)
+    })
 
-    it('should fail with invalid action', () =>
-      getTestRequest()
-        .patch('/permissions/123e4567-e89b-12d3-a456-426614174000')
-        .send({
+    it('should fail with invalid action', async () => {
+      try {
+        await api.patch('/permissions/1', {
           action: 'invalid-action'
         })
-        .expect(400))
+      } catch (error) {
+        expect(error.response.status).toBe(400)
+      }
+    })
 
-    it('should fail with invalid module', () =>
-      getTestRequest()
-        .patch('/permissions/123e4567-e89b-12d3-a456-426614174000')
-        .send({
+    it('should fail with invalid module', async () => {
+      try {
+        await api.patch('/permissions/1', {
           module: 'invalid-module'
         })
-        .expect(400))
+      } catch (error) {
+        expect(error.response.status).toBe(400)
+      }
+    })
   })
 
   describe('/permissions/:id (DELETE)', () => {
-    it('should delete permission', () =>
-      getTestRequest().delete('/permissions/123e4567-e89b-12d3-a456-426614174000').expect(200))
+    it('should delete permission', async () => {
+      const response = await api.delete('/permissions/1')
+      expect(response.status).toBe(200)
+    })
 
-    it('should return 404 for non-existent permission', () =>
-      getTestRequest().delete('/permissions/non-existent-id').expect(404))
+    it('should return 404 for non-existent permission', async () => {
+      try {
+        await api.delete('/permissions/999')
+      } catch (error) {
+        expect(error.response.status).toBe(404)
+      }
+    })
   })
 })

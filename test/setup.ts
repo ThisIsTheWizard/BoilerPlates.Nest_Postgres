@@ -1,39 +1,23 @@
-import { INestApplication } from '@nestjs/common'
-import { Test, TestingModule } from '@nestjs/testing'
-import { PrismaService } from '../src/prisma/prisma.service'
+import axios from 'axios'
 
-const request = require('supertest')
+const api = axios.create({
+  baseURL: `http://localhost:${process.env.PORT || 8000}`,
+  timeout: 10000
+})
 
-import { AppModule } from '../src/app/app.module'
-
-// Don't load .env files in tests - use environment variables from Docker
-
-let app: INestApplication
-let testRequest: request.SuperTest<request.Test>
-let prisma: PrismaService
+let authToken = null
 
 beforeAll(async () => {
-  const moduleFixture: TestingModule = await Test.createTestingModule({
-    imports: [AppModule]
-  }).compile()
-
-  app = moduleFixture.createNestApplication()
-  prisma = app.get(PrismaService)
-  
-  // Wait for database connection
-  await prisma.$connect()
-  
-  await app.init()
-  testRequest = request(app.getHttpServer())
-}, 30000)
-
-afterAll(async () => {
-  if (prisma) {
-    await prisma.$disconnect()
-  }
-  if (app) {
-    await app.close()
+  try {
+    await api.post('/test/setup')
+    const loginResponse = await api.post('/users/login', {
+      email: 'test@test.com',
+      password: 'Test123!@#'
+    })
+    authToken = loginResponse?.data?.access_token
+  } catch (error) {
+    console.log(error)
   }
 })
 
-export const getTestRequest = () => testRequest
+export { api, authToken }

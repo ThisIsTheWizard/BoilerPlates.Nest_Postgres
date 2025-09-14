@@ -17,13 +17,15 @@ services:
   node_server_test:
     build:
       context: .
-      dockerfile: Dockerfile.Test
+      dockerfile: Dockerfile.Dev
     container_name: node_server_test_container
     depends_on:
       postgres_test:
         condition: service_healthy
     env_file:
       - .env.test
+    ports:
+      - '8000:8000'
     volumes:
       - node_server_test_data:/app
       - /app/node_modules

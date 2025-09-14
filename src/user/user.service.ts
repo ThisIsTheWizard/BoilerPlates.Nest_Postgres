@@ -1,8 +1,9 @@
-import { Injectable } from '@nestjs/common'
+import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common'
 
 import { AuthTokenService } from '@/auth-token/auth-token.service'
 import { CommonService } from '@/common/common.service'
 import { PrismaService } from '@/prisma/prisma.service'
+import { VerificationTokenService } from '@/verification-token/verification-token.service'
 import {
   ChangeEmailDto,
   ChangePasswordDto,
@@ -20,9 +21,8 @@ import {
   VerifyForgotPasswordCodeDto,
   VerifyForgotPasswordDto,
   VerifyUserPasswordDto
-} from '@/user/user.dto'
-import { LoginResponse, MessageResponse, UserResponse } from '@/user/user.interface'
-import { VerificationTokenService } from '@/verification-token/verification-token.service'
+} from './user.dto'
+import { LoginResponse, MessageResponse, UserResponse } from './user.interface'
 
 @Injectable()
 export class UserService {
@@ -62,7 +62,7 @@ export class UserService {
     )
 
     if (!verificationToken) {
-      throw new Error('INVALID_TOKEN')
+      throw new BadRequestException('INVALID_TOKEN')
     }
 
     const user = await this.prisma.user.update({
@@ -80,7 +80,7 @@ export class UserService {
 
     const user = await this.prisma.user.findUnique({ where: { email } })
     if (!user) {
-      throw new Error('USER_DOES_NOT_EXIST')
+      throw new NotFoundException('USER_DOES_NOT_EXIST')
     }
 
     return { message: 'VERIFICATION_EMAIL_SENT' }
@@ -97,7 +97,7 @@ export class UserService {
     })
 
     if (!user || !user.password || !(await this.commonService.comparePassword(loginDto.password, user.password))) {
-      throw new Error('Invalid credentials')
+      throw new UnauthorizedException('Invalid credentials')
     }
 
     const token = this.commonService.generateJWTToken({
@@ -115,6 +115,9 @@ export class UserService {
 
     const decoded = this.commonService.decodeJWTToken(access_token) as { user_id: string }
     const { user_id } = decoded || {}
+    if (!user_id) {
+      throw new UnauthorizedException('INVALID_TOKEN')
+    }
 
     const user = await this.prisma.user.findUnique({
       where: { id: user_id },
@@ -162,7 +165,7 @@ export class UserService {
 
   async getMe(userId?: string): Promise<UserResponse> {
     if (!userId) {
-      throw new Error('UNAUTHORIZED')
+      throw new UnauthorizedException('UNAUTHORIZED')
     }
 
     const user = await this.prisma.user.findUnique({
@@ -189,7 +192,7 @@ export class UserService {
 
   async logout(token?: string): Promise<MessageResponse> {
     if (!token) {
-      throw new Error('UNAUTHORIZED')
+      throw new UnauthorizedException('UNAUTHORIZED')
     }
 
     await this.authTokenService.revokeAuthToken(token)
@@ -200,7 +203,7 @@ export class UserService {
     const { email } = changeEmailDto
 
     if (!userId) {
-      throw new Error('UNAUTHORIZED')
+      throw new UnauthorizedException('UNAUTHORIZED')
     }
 
     if (!this.commonService.validateEmail(email)) {
@@ -405,7 +408,7 @@ export class UserService {
 
     const user = await this.prisma.user.findUnique({ where: { email } })
     if (!user) {
-      throw new Error('USER_DOES_NOT_EXIST')
+      throw new NotFoundException('USER_DOES_NOT_EXIST')
     }
 
     return { message: 'FORGOT_PASSWORD_EMAIL_SENT' }
@@ -509,7 +512,7 @@ export class UserService {
   }
 
   async findOne(id: string) {
-    return this.prisma.user.findUnique({
+    const user = await this.prisma.user.findUnique({
       where: { id },
       include: {
         role_users: {
@@ -519,18 +522,66 @@ export class UserService {
         }
       }
     })
+    if (!user) {
+      throw new Error('USER_NOT_FOUND')
+    }
+
+    return user
   }
 
   async update(id: string, updateUserDto: UpdateUserDto) {
-    return this.prisma.user.update({
-      where: { id },
-      data: updateUserDto
+    try {
+      return this.prisma.user.update({
+        where: { id },
+        data: updateUserDto
+      })
+    } catch (error: any) {
+      if (error.code === 'P2025') {
+        throw new Error('USER_NOT_FOUND')
+      }
+      throw error
+    }
+  }
+
+  async seedTestUsers() {
+    const hashedPassword = await this.commonService.hashPassword('password')
+    return this.prisma.user.createMany({
+      data: [
+        {
+          email: 'test-1@test.com',
+          first_name: 'Test',
+          last_name: 'User 1',
+          password: hashedPassword,
+          status: 'active'
+        },
+        {
+          email: 'test-2@test.com',
+          first_name: 'Test',
+          last_name: 'User 2',
+          password: hashedPassword,
+          status: 'active'
+        },
+        {
+          email: 'test-3@test.com',
+          first_name: 'Test',
+          last_name: 'User 3',
+          password: hashedPassword,
+          status: 'active'
+        }
+      ]
     })
   }
 
   async remove(id: string) {
-    return this.prisma.user.delete({
-      where: { id }
-    })
+    try {
+      return this.prisma.user.delete({
+        where: { id }
+      })
+    } catch (error: any) {
+      if (error.code === 'P2025') {
+        throw new Error('USER_NOT_FOUND')
+      }
+      throw error
+    }
   }
 }
