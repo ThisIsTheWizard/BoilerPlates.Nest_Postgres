@@ -1,6 +1,6 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post } from '@nestjs/common'
 
-import { CreateRoleDto, UpdateRoleDto } from '@/role/role.dto'
+import { CreateRoleDto, UpdateRoleDto, ManagePermissionDto } from '@/role/role.dto'
 import { RoleService } from '@/role/role.service'
 
 @Controller('roles')
@@ -30,5 +30,25 @@ export class RoleController {
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.roleService.remove(id)
+  }
+
+  @Post('permissions/assign')
+  assignPermission(@Body() dto: ManagePermissionDto) {
+    return this.roleService.assignPermission(dto.roleId, dto.permissionId, dto.canDoAction)
+  }
+
+  @Post('permissions/revoke')
+  revokePermission(@Body() dto: ManagePermissionDto) {
+    return this.roleService.revokePermission(dto.roleId, dto.permissionId)
+  }
+
+  @Patch('permissions/update')
+  updatePermission(@Body() dto: ManagePermissionDto) {
+    return this.roleService.updatePermission(dto.roleId, dto.permissionId, dto.canDoAction!)
+  }
+
+  @Post('seed')
+  seedRoles() {
+    return this.roleService.seedSystemRoles()
   }
 }

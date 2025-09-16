@@ -103,12 +103,13 @@ model RoleUser {
 }
 
 model RolePermission {
-  id            String   @id @default(uuid())
-  created_at    DateTime @default(now())
-  created_by    String?
-  permission_id String
-  role_id       String
-  updated_at    DateTime @updatedAt
+  id             String   @id @default(uuid())
+  can_do_the_action  Boolean  @default(false)
+  created_at     DateTime @default(now())
+  created_by     String?
+  permission_id  String
+  role_id        String
+  updated_at     DateTime @updatedAt
 
   creator    User?      @relation("CreatedBy", fields: [created_by], references: [id])
   permission Permission @relation(fields: [permission_id], references: [id], onDelete: Cascade)

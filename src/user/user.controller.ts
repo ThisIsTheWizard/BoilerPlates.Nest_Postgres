@@ -146,4 +146,14 @@ export class UserController {
   remove(@Param('id') id: string) {
     return this.userService.remove(id)
   }
+
+  @Post(':id/roles/:roleName')
+  assignRole(@Param('id') userId: string, @Param('roleName') roleName: string) {
+    return this.userService.assignRole(userId, roleName)
+  }
+
+  @Delete(':id/roles/:roleName')
+  revokeRole(@Param('id') userId: string, @Param('roleName') roleName: string) {
+    return this.userService.revokeRole(userId, roleName)
+  }
 }

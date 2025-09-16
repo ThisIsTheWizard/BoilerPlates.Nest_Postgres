@@ -43,6 +43,17 @@ export class UserService {
       }
     })
 
+    // Assign default user role
+    const userRole = await this.prisma.role.findUnique({ where: { name: 'user' } })
+    if (userRole) {
+      await this.prisma.roleUser.create({
+        data: {
+          user_id: user.id,
+          role_id: userRole.id
+        }
+      })
+    }
+
     return {
       id: user.id,
       email: user.email,
@@ -583,5 +594,42 @@ export class UserService {
       }
       throw error
     }
+  }
+
+  async assignRole(userId: string, roleName: string) {
+    const role = await this.prisma.role.findUnique({ where: { name: roleName as any } })
+    if (!role) {
+      throw new Error('ROLE_NOT_FOUND')
+    }
+
+    return this.prisma.roleUser.upsert({
+      where: {
+        user_id_role_id: {
+          user_id: userId,
+          role_id: role.id
+        }
+      },
+      update: {},
+      create: {
+        user_id: userId,
+        role_id: role.id
+      }
+    })
+  }
+
+  async revokeRole(userId: string, roleName: string) {
+    const role = await this.prisma.role.findUnique({ where: { name: roleName as any } })
+    if (!role) {
+      throw new Error('ROLE_NOT_FOUND')
+    }
+
+    return this.prisma.roleUser.delete({
+      where: {
+        user_id_role_id: {
+          user_id: userId,
+          role_id: role.id
+        }
+      }
+    })
   }
 }

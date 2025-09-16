@@ -64,4 +64,44 @@ export class RoleService {
       throw error
     }
   }
+
+  async assignPermission(roleId: string, permissionId: string, canDoAction: boolean = true) {
+    return this.prisma.rolePermission.upsert({
+      where: {
+        role_id_permission_id: {
+          role_id: roleId,
+          permission_id: permissionId
+        }
+      },
+      update: { can_do_the_action: canDoAction },
+      create: {
+        role_id: roleId,
+        permission_id: permissionId,
+        can_do_the_action: canDoAction
+      }
+    })
+  }
+
+  async revokePermission(roleId: string, permissionId: string) {
+    return this.prisma.rolePermission.delete({
+      where: {
+        role_id_permission_id: {
+          role_id: roleId,
+          permission_id: permissionId
+        }
+      }
+    })
+  }
+
+  async updatePermission(roleId: string, permissionId: string, canDoAction: boolean) {
+    return this.prisma.rolePermission.update({
+      where: {
+        role_id_permission_id: {
+          role_id: roleId,
+          permission_id: permissionId
+        }
+      },
+      data: { can_do_the_action: canDoAction }
+    })
+  }
 }

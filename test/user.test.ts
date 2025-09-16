@@ -155,4 +155,34 @@ describe('UserController (e2e)', () => {
       expect(response.status).toBe(200)
     })
   })
+
+  describe('/users/register (POST) - Role Assignment', () => {
+    it('should assign user role on registration', async () => {
+      const registerResponse = await api.post('/users/register', {
+        email: 'roletest@example.com',
+        password: 'Test123!@#',
+        first_name: 'Role',
+        last_name: 'Test'
+      })
+      expect(registerResponse.status).toBe(201)
+      
+      const userResponse = await api.get(`/users/${registerResponse.data.id}`)
+      expect(userResponse.data.role_users).toHaveLength(1)
+      expect(userResponse.data.role_users[0].role.name).toBe('user')
+    })
+  })
+
+  describe('/users/:id/roles/:roleName (POST)', () => {
+    it('should assign role to user', async () => {
+      const response = await api.post('/users/1/roles/admin')
+      expect(response.status).toBe(201)
+    })
+  })
+
+  describe('/users/:id/roles/:roleName (DELETE)', () => {
+    it('should revoke role from user', async () => {
+      const response = await api.delete('/users/1/roles/admin')
+      expect(response.status).toBe(200)
+    })
+  })
 })

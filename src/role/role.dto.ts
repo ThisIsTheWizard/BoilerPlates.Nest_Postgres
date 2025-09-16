@@ -1,4 +1,4 @@
-import { IsEnum, IsOptional, IsString } from 'class-validator'
+import { IsBoolean, IsEnum, IsOptional, IsString } from 'class-validator'
 import { RoleName } from '@prisma/client'
 
 export class CreateRoleDto {
@@ -14,4 +14,24 @@ export class UpdateRoleDto {
   @IsOptional()
   @IsEnum(RoleName)
   name?: RoleName
+}
+
+export class AssignRoleDto {
+  @IsString()
+  userId: string
+
+  @IsEnum(RoleName)
+  roleName: RoleName
+}
+
+export class ManagePermissionDto {
+  @IsString()
+  roleId: string
+
+  @IsString()
+  permissionId: string
+
+  @IsOptional()
+  @IsBoolean()
+  canDoAction?: boolean
 }

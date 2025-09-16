@@ -83,4 +83,43 @@ describe('RoleController (e2e)', () => {
       }
     })
   })
+
+  describe('/roles/seed (POST)', () => {
+    it('should seed system roles', async () => {
+      const response = await api.post('/roles/seed')
+      expect(response.status).toBe(201)
+    })
+  })
+
+  describe('/roles/permissions/assign (POST)', () => {
+    it('should assign permission to role', async () => {
+      const response = await api.post('/roles/permissions/assign', {
+        roleId: '1',
+        permissionId: '1',
+        canDoAction: true
+      })
+      expect(response.status).toBe(201)
+    })
+  })
+
+  describe('/roles/permissions/revoke (POST)', () => {
+    it('should revoke permission from role', async () => {
+      const response = await api.post('/roles/permissions/revoke', {
+        roleId: '1',
+        permissionId: '1'
+      })
+      expect(response.status).toBe(201)
+    })
+  })
+
+  describe('/roles/permissions/update (PATCH)', () => {
+    it('should update role permission', async () => {
+      const response = await api.patch('/roles/permissions/update', {
+        roleId: '1',
+        permissionId: '1',
+        canDoAction: false
+      })
+      expect(response.status).toBe(200)
+    })
+  })
 })

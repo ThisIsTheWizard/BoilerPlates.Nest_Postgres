@@ -114,4 +114,17 @@ describe('PermissionController (e2e)', () => {
       }
     })
   })
+
+  describe('/permissions/seed (POST)', () => {
+    it('should seed all system permissions', async () => {
+      const response = await api.post('/permissions/seed')
+      expect(response.status).toBe(201)
+    })
+
+    it('should create permissions for all modules and actions', async () => {
+      await api.post('/permissions/seed')
+      const response = await api.get('/permissions')
+      expect(response.data.length).toBe(20) // 5 modules × 4 actions
+    })
+  })
 })

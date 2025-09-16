@@ -31,4 +31,9 @@ export class PermissionController {
   remove(@Param('id') id: string) {
     return this.permissionService.remove(id)
   }
+
+  @Post('seed')
+  seedPermissions() {
+    return this.permissionService.seedPermissions()
+  }
 }
