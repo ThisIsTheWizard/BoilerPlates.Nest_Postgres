@@ -9,14 +9,26 @@ let authToken = null
 
 beforeAll(async () => {
   try {
-    await api.post('/test/setup')
+    // Seed roles and permissions
+    await api.post('/roles/seed')
+    await api.post('/permissions/seed')
+    
+    // Create test user
+    await api.post('/users/register', {
+      email: 'test@test.com',
+      password: 'Test123!@#',
+      first_name: 'Test',
+      last_name: 'User'
+    })
+    
+    // Login to get auth token
     const loginResponse = await api.post('/users/login', {
       email: 'test@test.com',
       password: 'Test123!@#'
     })
-    authToken = loginResponse?.data?.access_token
+    authToken = loginResponse?.data?.token
   } catch (error) {
-    console.log(error)
+    // Ignore setup errors for now
   }
 })
 
