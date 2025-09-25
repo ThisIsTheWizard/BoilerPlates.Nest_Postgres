@@ -27,10 +27,11 @@ services:
     ports:
       - '8000:8000'
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000"]
+      test: ['CMD-SHELL', 'curl -f http://localhost:8000']
       interval: 5s
       timeout: 10s
       retries: 5
+      start_period: 15s
     volumes:
       - node_server_test_data:/app
       - /app/node_modules
