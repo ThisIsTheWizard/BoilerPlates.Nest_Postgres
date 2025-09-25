@@ -1,5 +1,5 @@
-import { IsEnum, IsOptional, IsString } from 'class-validator'
 import { PermissionAction, PermissionModule } from '@prisma/client'
+import { IsEnum, IsOptional, IsString } from 'class-validator'
 
 export class CreatePermissionDto {
   @IsEnum(PermissionAction)

@@ -12,7 +12,7 @@ beforeAll(async () => {
     // Seed roles and permissions
     await api.post('/roles/seed')
     await api.post('/permissions/seed')
-    
+
     // Create test user
     await api.post('/users/register', {
       email: 'test@test.com',
@@ -20,7 +20,7 @@ beforeAll(async () => {
       first_name: 'Test',
       last_name: 'User'
     })
-    
+
     // Login to get auth token
     const loginResponse = await api.post('/users/login', {
       email: 'test@test.com',

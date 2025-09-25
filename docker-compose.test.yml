@@ -17,7 +17,7 @@ services:
   node_server_test:
     build:
       context: .
-      dockerfile: Dockerfile.Dev
+      dockerfile: Dockerfile.Test
     container_name: node_server_test_container
     depends_on:
       postgres_test:
@@ -26,6 +26,11 @@ services:
       - .env.test
     ports:
       - '8000:8000'
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000"]
+      interval: 5s
+      timeout: 10s
+      retries: 5
     volumes:
       - node_server_test_data:/app
       - /app/node_modules

@@ -1,3 +1,4 @@
+import { RoleName } from '@prisma/client'
 import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common'
 
 import { AuthTokenService } from '@/auth-token/auth-token.service'
@@ -546,8 +547,8 @@ export class UserService {
         where: { id },
         data: updateUserDto
       })
-    } catch (error: any) {
-      if (error.code === 'P2025') {
+    } catch (error: unknown) {
+      if (error instanceof Object && 'code' in error && error.code === 'P2025') {
         throw new Error('USER_NOT_FOUND')
       }
       throw error
@@ -588,8 +589,8 @@ export class UserService {
       return this.prisma.user.delete({
         where: { id }
       })
-    } catch (error: any) {
-      if (error.code === 'P2025') {
+    } catch (error: unknown) {
+      if (error instanceof Object && 'code' in error && error.code === 'P2025') {
         throw new Error('USER_NOT_FOUND')
       }
       throw error
@@ -597,7 +598,11 @@ export class UserService {
   }
 
   async assignRole(userId: string, roleName: string) {
-    const role = await this.prisma.role.findUnique({ where: { name: roleName as any } })
+    if (!Object.values(RoleName).includes(roleName as RoleName)) {
+      throw new Error('INVALID_ROLE_NAME')
+    }
+
+    const role = await this.prisma.role.findUnique({ where: { name: roleName as RoleName } })
     if (!role) {
       throw new Error('ROLE_NOT_FOUND')
     }
@@ -618,7 +623,11 @@ export class UserService {
   }
 
   async revokeRole(userId: string, roleName: string) {
-    const role = await this.prisma.role.findUnique({ where: { name: roleName as any } })
+    if (!Object.values(RoleName).includes(roleName as RoleName)) {
+      throw new Error('INVALID_ROLE_NAME')
+    }
+
+    const role = await this.prisma.role.findUnique({ where: { name: roleName as RoleName } })
     if (!role) {
       throw new Error('ROLE_NOT_FOUND')
     }

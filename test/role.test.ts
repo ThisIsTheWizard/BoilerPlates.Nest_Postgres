@@ -93,7 +93,7 @@ describe('RoleController (e2e)', () => {
       // Create a role specifically for deletion
       const createResponse = await api.post('/roles', { name: 'admin' })
       const roleToDelete = createResponse.data.id
-      
+
       const response = await api.delete(`/roles/${roleToDelete}`)
       expect(response.status).toBe(200)
     })
@@ -119,7 +119,7 @@ describe('RoleController (e2e)', () => {
     it('should assign permission to role', async () => {
       const permissionsResponse = await api.get('/permissions')
       const permission = permissionsResponse.data[0]
-      
+
       const response = await api.post('/roles/permissions/assign', {
         roleId: testRoleId,
         permissionId: permission.id,

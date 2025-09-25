@@ -1,5 +1,5 @@
-import { IsBoolean, IsEnum, IsOptional, IsString } from 'class-validator'
 import { RoleName } from '@prisma/client'
+import { IsBoolean, IsEnum, IsOptional, IsString } from 'class-validator'
 
 export class CreateRoleDto {
   @IsEnum(RoleName)

@@ -55,5 +55,5 @@ export default tseslint.config(
     }
   },
   { files: ['**/*.dto.ts'], rules: { indent: 'off' } },
-  { ignores: ['dist', 'build'] }
+  { ignores: ['dist', 'build', 'test/**/*.ts'] }
 )

@@ -8,16 +8,14 @@ describe('Schema Validation (e2e)', () => {
     // Seed roles and permissions first
     await api.post('/roles/seed')
     await api.post('/permissions/seed')
-    
+
     // Get existing role and permission
     const rolesResponse = await api.get('/roles')
     const adminRole = rolesResponse.data.find((r: any) => r.name === 'admin')
     roleId = adminRole.id
 
     const permissionsResponse = await api.get('/permissions')
-    const createUserPermission = permissionsResponse.data.find(
-      (p: any) => p.action === 'create' && p.module === 'user'
-    )
+    const createUserPermission = permissionsResponse.data.find((p: any) => p.action === 'create' && p.module === 'user')
     permissionId = createUserPermission.id
   })
 

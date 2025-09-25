@@ -48,10 +48,19 @@ export class PermissionService {
   }
 
   async seedPermissions() {
-    const modules: Array<'user' | 'role' | 'permission' | 'role_user' | 'role_permission'> = ['user', 'role', 'permission', 'role_user', 'role_permission']
+    const modules: Array<'user' | 'role' | 'permission' | 'role_user' | 'role_permission'> = [
+      'user',
+      'role',
+      'permission',
+      'role_user',
+      'role_permission'
+    ]
     const actions: Array<'create' | 'read' | 'update' | 'delete'> = ['create', 'read', 'update', 'delete']
-    
-    const permissions: Array<{ action: 'create' | 'read' | 'update' | 'delete', module: 'user' | 'role' | 'permission' | 'role_user' | 'role_permission' }> = []
+
+    const permissions: Array<{
+      action: 'create' | 'read' | 'update' | 'delete'
+      module: 'user' | 'role' | 'permission' | 'role_user' | 'role_permission'
+    }> = []
     for (const module of modules) {
       for (const action of actions) {
         permissions.push({ action, module })

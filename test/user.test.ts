@@ -92,20 +92,28 @@ describe('UserController (e2e)', () => {
 
   describe('/users/logout (POST)', () => {
     it('should logout user', async () => {
-      const response = await api.post('/users/logout', {}, {
-        headers: { Authorization: `Bearer ${authToken}` }
-      })
+      const response = await api.post(
+        '/users/logout',
+        {},
+        {
+          headers: { Authorization: `Bearer ${authToken}` }
+        }
+      )
       expect(response.status).toBe(201)
     })
   })
 
   describe('/users/change-email (POST)', () => {
     it('should change email', async () => {
-      const response = await api.post('/users/change-email', {
-        email: 'newemail@example.com'
-      }, {
-        headers: { Authorization: `Bearer ${authToken}` }
-      })
+      const response = await api.post(
+        '/users/change-email',
+        {
+          email: 'newemail@example.com'
+        },
+        {
+          headers: { Authorization: `Bearer ${authToken}` }
+        }
+      )
       expect(response.status).toBe(201)
     })
   })
@@ -170,7 +178,7 @@ describe('UserController (e2e)', () => {
         last_name: 'Test'
       })
       expect(registerResponse.status).toBe(201)
-      
+
       const userResponse = await api.get(`/users/${registerResponse.data.id}`)
       expect(userResponse.data.role_users).toHaveLength(1)
       expect(userResponse.data.role_users[0].role.name).toBe('user')
