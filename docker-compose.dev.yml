@@ -41,10 +41,9 @@ services:
       postgres:
         condition: service_healthy
     volumes:
-      - node_server_data:/app
+      - .:/app
       - /app/node_modules
 
 volumes:
-  node_server_data:
   postgres_data:
   pgadmin_data:

@@ -8,8 +8,8 @@ export class RoleController {
   constructor(private readonly roleService: RoleService) {}
 
   @Post()
-  create(@Body() createRoleDto: CreateRoleDto) {
-    return this.roleService.create(createRoleDto)
+  create(@Body() body: CreateRoleDto) {
+    return this.roleService.create(body)
   }
 
   @Get()
@@ -23,8 +23,8 @@ export class RoleController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateRoleDto: UpdateRoleDto) {
-    return this.roleService.update(id, updateRoleDto)
+  update(@Param('id') id: string, @Body() body: UpdateRoleDto) {
+    return this.roleService.update(id, body)
   }
 
   @Delete(':id')
@@ -33,18 +33,18 @@ export class RoleController {
   }
 
   @Post('permissions/assign')
-  assignPermission(@Body() dto: ManagePermissionDto) {
-    return this.roleService.assignPermission(dto.roleId, dto.permissionId, dto.canDoAction)
+  assignPermission(@Body() body: ManagePermissionDto) {
+    return this.roleService.assignPermission(body)
   }
 
   @Post('permissions/revoke')
-  revokePermission(@Body() dto: ManagePermissionDto) {
-    return this.roleService.revokePermission(dto.roleId, dto.permissionId)
+  revokePermission(@Body() body: ManagePermissionDto) {
+    return this.roleService.revokePermission(body)
   }
 
   @Patch('permissions/update')
-  updatePermission(@Body() dto: ManagePermissionDto) {
-    return this.roleService.updatePermission(dto.roleId, dto.permissionId, dto.canDoAction!)
+  updatePermission(@Body() body: ManagePermissionDto) {
+    return this.roleService.updatePermission(body)
   }
 
   @Post('seed')

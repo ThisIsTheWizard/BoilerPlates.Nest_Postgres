@@ -3,7 +3,7 @@ FROM node:20-slim
 LABEL org.opencontainers.image.authors="Elias Shekh"
 
 # Install OpenSSL for Prisma
-RUN apt-get update -y && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
+RUN apt-get update -y && apt-get install -y openssl procps && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
@@ -15,6 +15,6 @@ RUN pnpm i
 
 COPY . .
 
-CMD ["sh", "-c", "pnpm run db:generate && pnpm run db:push && pnpm run dev"]
+CMD ["sh", "-c", "pnpm db:generate && pnpm db:push && pnpm nest:dev"]
 
 EXPOSE 8000

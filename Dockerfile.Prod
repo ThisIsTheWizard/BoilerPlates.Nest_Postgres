@@ -17,6 +17,6 @@ COPY . .
 
 RUN pnpm run build
 
-CMD ["sh", "-c", "node build/main"]
+CMD ["sh", "-c", "pnpm nest:start"]
 
 EXPOSE 8000

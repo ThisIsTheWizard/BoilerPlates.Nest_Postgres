@@ -106,14 +106,14 @@ describe('RBAC System Integration (e2e)', () => {
       expect(response.data.role_permissions.length).toBeGreaterThanOrEqual(0)
 
       if (response.data.role_permissions.length > 0) {
-        const allCanDo = response.data.role_permissions.every((rp: any) => rp.can_do_action === true)
+        const allCanDo = response.data.role_permissions.every((rp: any) => rp.can_do_the_action === true)
         expect(allCanDo).toBe(true)
       }
     })
 
     it('should verify user has limited permissions', async () => {
       const response = await api.get(`/roles/${userRole.id}`)
-      const userPermissions = response.data.role_permissions.filter((rp: any) => rp.can_do_action === true)
+      const userPermissions = response.data.role_permissions.filter((rp: any) => rp.can_do_the_action === true)
       expect(userPermissions.length).toBeLessThanOrEqual(20) // Less than or equal to total permissions
     })
   })

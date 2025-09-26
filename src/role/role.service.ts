@@ -2,32 +2,32 @@ import { Injectable, NotFoundException } from '@nestjs/common'
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library'
 
 import { PrismaService } from '../prisma/prisma.service'
-import { CreateRoleDto, UpdateRoleDto } from './role.dto'
+import { CreateRoleDto, ManagePermissionDto, UpdateRoleDto } from './role.dto'
 
 @Injectable()
 export class RoleService {
   constructor(private prisma: PrismaService) {}
 
-  async create(data: CreateRoleDto) {
-    return this.prisma.role.create({ data })
+  async create(params: CreateRoleDto) {
+    return this.prisma.role.create({ data: params })
   }
 
   async findAll() {
     return this.prisma.role.findMany({
       include: {
-        role_users: { include: { user: true } },
-        role_permissions: { include: { permission: true } }
+        role_permissions: { include: { permission: true } },
+        role_users: { include: { user: true } }
       }
     })
   }
 
   async findOne(id: string) {
     const role = await this.prisma.role.findUnique({
-      where: { id },
       include: {
-        role_users: { include: { user: true } },
-        role_permissions: { include: { permission: true } }
-      }
+        role_permissions: { include: { permission: true } },
+        role_users: { include: { user: true } }
+      },
+      where: { id }
     })
     if (!role) {
       throw new NotFoundException('Role not found')
@@ -36,9 +36,9 @@ export class RoleService {
     return role
   }
 
-  async update(id: string, data: UpdateRoleDto) {
+  async update(id: string, params: UpdateRoleDto) {
     try {
-      return this.prisma.role.update({ where: { id }, data })
+      return this.prisma.role.update({ data: params, where: { id } })
     } catch (error) {
       if (error instanceof PrismaClientKnownRequestError && error.code === 'P2025') {
         throw new NotFoundException('Role not found')
@@ -65,43 +65,49 @@ export class RoleService {
     }
   }
 
-  async assignPermission(roleId: string, permissionId: string, canDoAction: boolean = true) {
+  async assignPermission(params: ManagePermissionDto) {
+    const { can_do_the_action = false, permission_id, role_id } = params || {}
+
     return this.prisma.rolePermission.upsert({
+      create: {
+        can_do_the_action,
+        permission_id,
+        role_id
+      },
+      update: { can_do_the_action },
       where: {
         role_id_permission_id: {
-          role_id: roleId,
-          permission_id: permissionId
+          permission_id,
+          role_id
         }
-      },
-      update: { can_do_the_action: canDoAction },
-      create: {
-        role_id: roleId,
-        permission_id: permissionId,
-        can_do_the_action: canDoAction
       }
     })
   }
 
-  async revokePermission(roleId: string, permissionId: string) {
+  async revokePermission(params: ManagePermissionDto) {
+    const { permission_id, role_id } = params || {}
+
     return this.prisma.rolePermission.delete({
       where: {
         role_id_permission_id: {
-          role_id: roleId,
-          permission_id: permissionId
+          permission_id,
+          role_id
         }
       }
     })
   }
 
-  async updatePermission(roleId: string, permissionId: string, canDoAction: boolean) {
+  async updatePermission(params: ManagePermissionDto) {
+    const { can_do_the_action = false, permission_id, role_id } = params || {}
+
     return this.prisma.rolePermission.update({
+      data: { can_do_the_action },
       where: {
         role_id_permission_id: {
-          role_id: roleId,
-          permission_id: permissionId
+          permission_id,
+          role_id
         }
-      },
-      data: { can_do_the_action: canDoAction }
+      }
     })
   }
 }

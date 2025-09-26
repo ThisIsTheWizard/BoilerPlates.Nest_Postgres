@@ -6,7 +6,6 @@
   "author": "The Wizard",
   "license": "MIT",
   "scripts": {
-    "build": "nest build",
     "compose:dev-down": "docker compose -f docker-compose.dev.yml down -v",
     "compose:dev-up": "docker compose -f docker-compose.dev.yml up -d --build",
     "compose:prod-down": "docker compose -f docker-compose.prod.yml down -v",
@@ -18,12 +17,15 @@
     "db:migrate": "prisma migrate dev",
     "db:studio": "prisma studio",
     "db:seed": "ts-node prisma/seed.ts",
-    "dev": "nest start --watch",
+    "dev": "pnpm compose:dev-down && pnpm compose:dev-up",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\"",
     "lint-fix": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
-    "pretest": "pnpm run compose:test-down && pnpm run compose:test-up",
-    "seed": "pnpm run db:seed",
+    "nest:build": "nest build",
+    "nest:dev": "nest start --watch",
+    "nest:start": "nest start",
+    "pretest": "pnpm compose:test-down && pnpm compose:test-up",
+    "seed": "pnpm db:seed",
     "test": "jest"
   },
   "dependencies": {

@@ -18,20 +18,19 @@ export class UpdateRoleDto {
 
 export class AssignRoleDto {
   @IsString()
-  userId: string
+  user_id: string
 
   @IsEnum(RoleName)
-  roleName: RoleName
+  role_name: RoleName
 }
 
 export class ManagePermissionDto {
-  @IsString()
-  roleId: string
-
-  @IsString()
-  permissionId: string
-
-  @IsOptional()
   @IsBoolean()
-  canDoAction?: boolean
+  can_do_the_action?: boolean
+
+  @IsString()
+  permission_id: string
+
+  @IsString()
+  role_id: string
 }
