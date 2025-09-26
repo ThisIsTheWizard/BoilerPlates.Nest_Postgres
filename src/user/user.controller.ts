@@ -1,4 +1,5 @@
 import { Body, Controller, Delete, Get, Headers, Param, Patch, Post } from '@nestjs/common'
+import { ApiBearerAuth } from '@nestjs/swagger'
 
 import { User } from '@/decorators/user.decorator'
 import {
@@ -51,22 +52,22 @@ export class UserController {
   }
 
   @Get('me')
-  getMe(@User('user_id') userId: string) {
-    // TODO: Add AuthGuard
-    return this.userService.getMe(userId)
+  @ApiBearerAuth()
+  getMe(@User('user_id') user_id: string) {
+    return this.userService.getMe(user_id)
   }
 
   @Post('logout')
+  @ApiBearerAuth()
   logout(@Headers('authorization') authorization: string) {
-    // TODO: Add AuthGuard
     const token = authorization?.replace('Bearer ', '')
     return this.userService.logout(token)
   }
 
   @Post('change-email')
+  @ApiBearerAuth()
   changeEmail(@Body() changeEmailDto: ChangeEmailDto, @User('user_id') userId: string) {
-    // TODO: Add AuthGuard
-    return this.userService.changeEmail(changeEmailDto, userId)
+    return this.userService.changeEmail(changeEmailDto.email, userId)
   }
 
   @Post('cancel-change-email')
@@ -75,8 +76,8 @@ export class UserController {
   }
 
   @Post('verify-change-email')
+  @ApiBearerAuth()
   verifyChangeEmail(@Body() verifyChangeEmailDto: VerifyChangeEmailDto, @User('user_id') userId: string) {
-    // TODO: Add AuthGuard
     return this.userService.verifyChangeEmail(verifyChangeEmailDto, userId)
   }
 
@@ -86,8 +87,8 @@ export class UserController {
   }
 
   @Post('change-password')
+  @ApiBearerAuth()
   changePassword(@Body() changePasswordDto: ChangePasswordDto, @User('user_id') userId: string) {
-    // TODO: Add AuthGuard
     return this.userService.changePassword(changePasswordDto, userId)
   }
 
@@ -117,42 +118,49 @@ export class UserController {
   }
 
   @Post('verify-user-password')
+  @ApiBearerAuth()
   verifyUserPassword(@Body() verifyUserPasswordDto: VerifyUserPasswordDto, @User('user_id') userId: string) {
-    // TODO: Add AuthGuard
     return this.userService.verifyUserPassword(verifyUserPasswordDto, userId)
   }
 
   @Post()
+  @ApiBearerAuth()
   create(@Body() createUserDto: CreateUserDto) {
     return this.userService.create(createUserDto)
   }
 
   @Get()
+  @ApiBearerAuth()
   findAll() {
     return this.userService.findAll()
   }
 
   @Get(':id')
+  @ApiBearerAuth()
   findOne(@Param('id') id: string) {
-    return this.userService.findOne(id)
+    return this.userService.findOne({ where: { id } })
   }
 
   @Patch(':id')
+  @ApiBearerAuth()
   update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
     return this.userService.update(id, updateUserDto)
   }
 
   @Delete(':id')
+  @ApiBearerAuth()
   remove(@Param('id') id: string) {
     return this.userService.remove(id)
   }
 
   @Post(':id/roles/:roleName')
+  @ApiBearerAuth()
   assignRole(@Param('id') userId: string, @Param('roleName') roleName: string) {
     return this.userService.assignRole(userId, roleName)
   }
 
   @Delete(':id/roles/:roleName')
+  @ApiBearerAuth()
   revokeRole(@Param('id') userId: string, @Param('roleName') roleName: string) {
     return this.userService.revokeRole(userId, roleName)
   }

@@ -1,5 +1,6 @@
 import { PrismaService } from '@/prisma/prisma.service'
 import { Injectable } from '@nestjs/common'
+import { Prisma } from '@prisma/client'
 
 @Injectable()
 export class VerificationTokenService {
@@ -28,10 +29,8 @@ export class VerificationTokenService {
     })
   }
 
-  async deleteVerificationTokens(userId: string, email: string, type: 'user_verification' | 'forgot_password') {
-    return this.prisma.verificationToken.deleteMany({
-      where: { user_id: userId, email, type }
-    })
+  async deleteVerificationTokens(options: Prisma.VerificationTokenDeleteManyArgs) {
+    return this.prisma.verificationToken.deleteMany(options)
   }
 
   async cancelVerificationTokens(userId: string, type: 'user_verification' | 'forgot_password') {
@@ -41,22 +40,12 @@ export class VerificationTokenService {
     })
   }
 
-  async createVerificationToken(data: {
-    email: string
-    user_id: string
-    type: 'user_verification' | 'forgot_password'
-  }) {
-    const token = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15)
-    const expiredAt = new Date(Date.now() + 24 * 60 * 60 * 1000) // 24 hours
+  async createVerificationToken(options: Prisma.VerificationTokenCreateArgs) {
+    if (!options.data.token) {
+      options.data.token = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15)
+    }
 
-    return this.prisma.verificationToken.create({
-      data: {
-        ...data,
-        token,
-        expired_at: expiredAt,
-        status: 'unverified'
-      }
-    })
+    return this.prisma.verificationToken.create(options)
   }
 
   async findVerificationTokenByUserId(userId: string, token: string, type: 'user_verification' | 'forgot_password') {

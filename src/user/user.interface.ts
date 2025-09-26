@@ -1,17 +1,17 @@
-export interface LoginResponse {
-  user: UserResponse
-  token: string
-}
 
-export interface UserResponse {
-  id: string
-  email: string
+import { Prisma, User } from '@prisma/client'
+
+export type UserResponse = Pick<User, 'id' | 'email' | 'status'> & {
   first_name?: string | null
   last_name?: string | null
-  status?: string
 }
 
-export interface MessageResponse {
-  message: string
-  success?: boolean
-}
+export type UserWithRoles = Prisma.UserGetPayload<{
+  include: {
+    role_users: {
+      include: {
+        role: true
+      }
+    }
+  }
+}>

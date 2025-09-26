@@ -14,12 +14,12 @@ export class RoleController {
 
   @Get()
   findAll() {
-    return this.roleService.findAll()
+    return this.roleService.findAll({})
   }
 
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.roleService.findOne(id)
+    return this.roleService.findOne({ where: { id } })
   }
 
   @Patch(':id')

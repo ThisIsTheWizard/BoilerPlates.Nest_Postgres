@@ -1,59 +1,51 @@
-import { Injectable, NotFoundException } from '@nestjs/common'
-import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library'
+import { Injectable } from '@nestjs/common'
 
-import { PrismaService } from '../prisma/prisma.service'
+import { CommonService } from '@/common/common.service'
+import { PrismaService } from '@/prisma/prisma.service'
+import { Prisma } from '@prisma/client'
 
 @Injectable()
 export class AuthTokenService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private commonService: CommonService,
+    private prisma: PrismaService
+  ) {}
 
-  async createAuthToken(userId: string, token: string, expiredAt: Date) {
-    return this.prisma.authToken.create({
-      data: { user_id: userId, token, expired_at: expiredAt }
-    })
+  async countAuthTokens(options: Prisma.AuthTokenCountArgs) {
+    return this.prisma.authToken.count(options)
   }
 
-  async deleteAuthTokens(userId: string) {
-    return this.prisma.authToken.deleteMany({
-      where: { user_id: userId }
-    })
+  async createAuthToken(options: Prisma.AuthTokenCreateArgs) {
+    return this.prisma.authToken.create(options)
   }
 
-  async revokeAuthToken(token: string) {
-    try {
-      return this.prisma.authToken.delete({
-        where: { token }
-      })
-    } catch (error) {
-      if (error instanceof PrismaClientKnownRequestError && error.code === 'P2025') {
-        throw new NotFoundException('Token not found')
-      }
-      throw error
+  async createAuthTokensForUser(params: { email: string; roles: string[]; user_id: string }) {
+    const { email, roles, user_id } = params || {}
+
+    const access_token = this.commonService.generateJWTToken({ email, roles, sub: user_id, user_id })
+    const refresh_token = this.commonService.generateJWTToken({ sub: user_id, user_id })
+
+    const authToken = await this.createAuthToken({ data: { access_token, refresh_token, user_id } })
+    if (!authToken?.id) {
+      throw new Error('COULD_NOT_CREATE_AUTH_TOKEN')
     }
+
+    return { access_token, refresh_token }
   }
 
-  async verifyAuthToken(token: string) {
-    return this.prisma.authToken.findUnique({
-      where: { token },
-      include: { user: true }
-    })
+  async deleteAuthToken(options: Prisma.AuthTokenDeleteArgs) {
+    return this.prisma.authToken.delete(options)
   }
 
-  async validateRefreshToken(refreshToken: string, userId: string): Promise<boolean> {
-    const token = await this.prisma.authToken.findFirst({
-      where: {
-        token: refreshToken,
-        user_id: userId,
-        expired_at: { gt: new Date() }
-      }
-    })
-    return !!token
+  async deleteAuthTokens(options: Prisma.AuthTokenDeleteManyArgs) {
+    return this.prisma.authToken.deleteMany(options)
   }
 
-  async updateRefreshToken(oldToken: string, newToken: string) {
-    return this.prisma.authToken.update({
-      where: { token: oldToken },
-      data: { token: newToken }
-    })
+  async getAuthToken(options: Prisma.AuthTokenFindUniqueArgs) {
+    return this.prisma.authToken.findUnique(options)
+  }
+
+  async getAuthTokens(options: Prisma.AuthTokenFindManyArgs) {
+    return this.prisma.authToken.findMany(options)
   }
 }

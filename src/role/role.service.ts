@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common'
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library'
 
+import { Prisma } from '@prisma/client'
 import { PrismaService } from '../prisma/prisma.service'
 import { CreateRoleDto, ManagePermissionDto, UpdateRoleDto } from './role.dto'
 
@@ -12,28 +13,26 @@ export class RoleService {
     return this.prisma.role.create({ data: params })
   }
 
-  async findAll() {
-    return this.prisma.role.findMany({
-      include: {
+  async findAll(options: Prisma.RoleFindManyArgs) {
+    if (!options.include) {
+      options.include = {
         role_permissions: { include: { permission: true } },
         role_users: { include: { user: true } }
       }
-    })
-  }
-
-  async findOne(id: string) {
-    const role = await this.prisma.role.findUnique({
-      include: {
-        role_permissions: { include: { permission: true } },
-        role_users: { include: { user: true } }
-      },
-      where: { id }
-    })
-    if (!role) {
-      throw new NotFoundException('Role not found')
     }
 
-    return role
+    return this.prisma.role.findMany(options)
+  }
+
+  async findOne(options: Prisma.RoleFindUniqueArgs) {
+    if (!options.include) {
+      options.include = {
+        role_permissions: { include: { permission: true } },
+        role_users: { include: { user: true } }
+      }
+    }
+
+    return this.prisma.role.findUnique(options)
   }
 
   async update(id: string, params: UpdateRoleDto) {

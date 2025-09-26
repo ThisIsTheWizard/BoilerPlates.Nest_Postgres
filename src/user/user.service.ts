@@ -1,10 +1,12 @@
-import { RoleName } from '@prisma/client'
 import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common'
+import { Prisma, RoleName } from '@prisma/client'
 
+import { TokenResponse } from '@/auth-token/auth-token.interface'
 import { AuthTokenService } from '@/auth-token/auth-token.service'
+import { MessageResponse } from '@/common/common.interface'
 import { CommonService } from '@/common/common.service'
 import { PrismaService } from '@/prisma/prisma.service'
-import { VerificationTokenService } from '@/verification-token/verification-token.service'
+import { RoleService } from '@/role/role.service'
 import {
   ChangeEmailDto,
   ChangePasswordDto,
@@ -22,22 +24,25 @@ import {
   VerifyForgotPasswordCodeDto,
   VerifyForgotPasswordDto,
   VerifyUserPasswordDto
-} from './user.dto'
-import { LoginResponse, MessageResponse, UserResponse } from './user.interface'
+} from '@/user/user.dto'
+import { UserResponse, UserWithRoles } from '@/user/user.interface'
+import { VerificationTokenService } from '@/verification-token/verification-token.service'
+import { pick } from 'lodash'
 
 @Injectable()
 export class UserService {
   constructor(
-    private prisma: PrismaService,
-    private commonService: CommonService,
     private authTokenService: AuthTokenService,
+    private commonService: CommonService,
+    private prismaService: PrismaService,
+    private roleService: RoleService,
     private verificationTokenService: VerificationTokenService
   ) {}
 
   async register(registerDto: RegisterDto): Promise<UserResponse> {
     const hashedPassword = await this.commonService.hashPassword(registerDto.password)
 
-    const user = await this.prisma.user.create({
+    const user = await this.prismaService.user.create({
       data: {
         ...registerDto,
         password: hashedPassword
@@ -45,9 +50,9 @@ export class UserService {
     })
 
     // Assign default user role
-    const userRole = await this.prisma.role.findUnique({ where: { name: 'user' } })
+    const userRole = await this.roleService.findOne({ where: { name: 'user' } })
     if (userRole) {
-      await this.prisma.roleUser.create({
+      await this.prismaService.roleUser.create({
         data: {
           user_id: user.id,
           role_id: userRole.id
@@ -55,13 +60,7 @@ export class UserService {
       })
     }
 
-    return {
-      id: user.id,
-      email: user.email,
-      first_name: user.first_name,
-      last_name: user.last_name,
-      status: user.status
-    }
+    return pick(user, ['id', 'email', 'first_name', 'last_name', 'status'])
   }
 
   async verifyUserEmail(verifyEmailDto: VerifyEmailDto): Promise<UserResponse> {
@@ -77,7 +76,7 @@ export class UserService {
       throw new BadRequestException('INVALID_TOKEN')
     }
 
-    const user = await this.prisma.user.update({
+    const user = await this.prismaService.user.update({
       where: { email },
       data: { status: 'active' }
     })
@@ -90,116 +89,71 @@ export class UserService {
   async resendVerificationEmail(resendVerificationDto: ResendVerificationDto): Promise<MessageResponse> {
     const { email } = resendVerificationDto
 
-    const user = await this.prisma.user.findUnique({ where: { email } })
-    if (!user) {
+    const user = await this.findOne({ where: { email } })
+    if (!user?.id) {
       throw new NotFoundException('USER_DOES_NOT_EXIST')
     }
 
-    return { message: 'VERIFICATION_EMAIL_SENT' }
+    return { message: 'VERIFICATION_EMAIL_SENT', success: true }
   }
 
-  async login(loginDto: LoginDto): Promise<LoginResponse> {
-    const user = await this.prisma.user.findUnique({
-      where: { email: loginDto.email },
-      include: {
-        role_users: {
-          include: { role: true }
-        }
-      }
+  async login(loginDto: LoginDto): Promise<TokenResponse> {
+    const user: UserWithRoles | null = await this.findOne({
+      where: { email: loginDto.email }
     })
-
-    if (!user || !user.password || !(await this.commonService.comparePassword(loginDto.password, user.password))) {
-      throw new UnauthorizedException('Invalid credentials')
+    if (!user?.id) {
+      throw new UnauthorizedException('USER_DOES_NOT_EXIST')
+    }
+    if (!(await this.commonService.comparePassword(loginDto.password, user?.password || ''))) {
+      throw new UnauthorizedException('INVALID_CREDENTIALS')
     }
 
-    const token = this.commonService.generateJWTToken({
-      user_id: user.id,
-      email: user.email
+    return this.authTokenService.createAuthTokensForUser({
+      email: user.email,
+      roles: user.role_users.map((ru) => ru.role.name),
+      user_id: user.id
     })
-
-    return { user, token }
   }
 
-  async refreshToken(
-    refreshTokenDto: RefreshTokenDto
-  ): Promise<MessageResponse & { access_token?: string; refresh_token?: string }> {
+  async refreshToken(refreshTokenDto: RefreshTokenDto): Promise<TokenResponse> {
     const { access_token, refresh_token } = refreshTokenDto
 
-    const decoded = this.commonService.decodeJWTToken(access_token) as { user_id: string }
-    const { user_id } = decoded || {}
-    if (!user_id) {
+    const authToken = await this.authTokenService.getAuthToken({ where: { access_token, refresh_token } })
+    if (!authToken?.id) {
       throw new UnauthorizedException('INVALID_TOKEN')
     }
 
-    const user = await this.prisma.user.findUnique({
-      where: { id: user_id },
-      include: {
-        role_users: {
-          include: { role: true }
-        }
-      }
-    })
-
-    if (!user) {
+    const decoded = this.commonService.decodeJWTToken(access_token) as { user_id: string }
+    const { user_id } = decoded || {}
+    const user: UserWithRoles | null = await this.findOne({ where: { id: user_id } })
+    if (!user?.id) {
       throw new Error('USER_NOT_FOUND')
     }
 
-    // Validate refresh token and generate new tokens
-    const isValidRefreshToken = await this.authTokenService.validateRefreshToken(refresh_token, user_id)
-    if (!isValidRefreshToken) {
-      throw new Error('INVALID_REFRESH_TOKEN')
-    }
-
-    // Generate new access and refresh tokens
-    const newAccessToken = this.commonService.generateJWTToken({
-      user_id: user.id,
+    const tokens = await this.authTokenService.createAuthTokensForUser({
       email: user.email,
-      roles: user.role_users.map((ru) => ru.role.name)
+      roles: user.role_users.map((ru) => ru.role.name),
+      user_id: user.id
     })
 
-    const newRefreshToken = this.commonService.generateJWTToken(
-      {
-        user_id: user.id,
-        email: user.email
-      },
-      true
-    )
+    await this.authTokenService.deleteAuthToken({ where: { id: authToken.id } })
 
-    // Update refresh token in database
-    await this.authTokenService.updateRefreshToken(refresh_token, newRefreshToken)
-
-    return {
-      message: 'TOKENS_REFRESHED',
-      access_token: newAccessToken,
-      refresh_token: newRefreshToken
-    }
+    return tokens
   }
 
-  async getMe(userId?: string): Promise<UserResponse> {
-    if (!userId) {
+  async getMe(user_id?: string): Promise<UserResponse> {
+    if (!user_id) {
       throw new UnauthorizedException('UNAUTHORIZED')
     }
 
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
-      include: {
-        role_users: {
-          include: { role: true }
-        }
-      }
+    const user = await this.findOne({
+      where: { id: user_id }
     })
-
-    if (!user) {
+    if (!user?.id) {
       throw new Error('USER_NOT_FOUND')
     }
 
-    return {
-      id: user.id,
-      email: user.email,
-      first_name: user.first_name,
-      last_name: user.last_name,
-      status: user.status
-    }
+    return pick(user, ['id', 'email', 'first_name', 'last_name', 'status'])
   }
 
   async logout(token?: string): Promise<MessageResponse> {
@@ -207,75 +161,71 @@ export class UserService {
       throw new UnauthorizedException('UNAUTHORIZED')
     }
 
-    await this.authTokenService.revokeAuthToken(token)
-    return { message: 'USER_LOGGED_OUT' }
+    await this.authTokenService.deleteAuthTokens({ where: { access_token: token } })
+    return { message: 'USER_LOGGED_OUT', success: true }
   }
 
-  async changeEmail(changeEmailDto: ChangeEmailDto, userId?: string): Promise<UserResponse> {
-    const { email } = changeEmailDto
-
-    if (!userId) {
+  async changeEmail(email: string, user_id: string): Promise<UserResponse> {
+    if (!email || !user_id) {
       throw new UnauthorizedException('UNAUTHORIZED')
     }
-
     if (!this.commonService.validateEmail(email)) {
       throw new Error('EMAIL_IS_INVALID')
     }
 
-    const existingUser = await this.prisma.user.findFirst({
+    const existingUser = await this.prismaService.user.findFirst({
       where: { OR: [{ email }, { new_email: email }] }
     })
-
-    if (existingUser) {
+    if (existingUser?.id) {
       throw new Error('NEW_EMAIL_IS_ALREADY_ASSOCIATED_WITH_A_USER')
     }
 
-    const user = await this.prisma.user.findUnique({ where: { id: userId } })
-    if (!user) {
+    const user = await this.findOne({ where: { id: user_id } })
+    if (!user?.id) {
       throw new Error('USER_DOES_NOT_EXIST')
     }
-    if (user.status !== 'active') {
+    if (!(user?.status === 'active')) {
       throw new Error(`USER_IS_${user.status.toUpperCase()}`)
     }
 
-    await this.prisma.user.update({
-      where: { id: userId },
+    await this.prismaService.user.update({
+      where: { id: user_id },
       data: { new_email: email }
     })
 
     // Delete existing verification tokens and create new one
-    await this.verificationTokenService.deleteVerificationTokens(userId, email, 'user_verification')
+    await this.verificationTokenService.deleteVerificationTokens({
+      where: { email, type: 'user_verification', user_id }
+    })
     await this.verificationTokenService.createVerificationToken({
-      email,
-      user_id: userId,
-      type: 'user_verification'
+      data: {
+        email,
+        type: 'user_verification',
+        user_id,
+        token: Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15),
+        expired_at: new Date(Date.now() + 1000 * 60 * 60) // 1 hour
+      }
     })
 
-    return {
-      id: user.id,
-      email: user.email,
-      first_name: user.first_name,
-      last_name: user.last_name,
-      status: user.status
-    }
+    return pick(user, ['id', 'email', 'first_name', 'last_name', 'status'])
   }
 
   async cancelChangeEmail(changeEmailDto: ChangeEmailDto): Promise<MessageResponse> {
     const { email } = changeEmailDto
 
-    const user = await this.prisma.user.findFirst({
+    const user = await this.prismaService.user.findFirst({
       where: { new_email: email }
     })
     if (!user) {
       throw new Error('NO_CHANGE_EMAIL_REQUEST_IS_FOUND')
     }
 
-    await this.prisma.user.update({
+    await this.prismaService.user.update({
       where: { id: user.id },
       data: { new_email: null }
     })
 
-    return { message: 'EMAIL_CHANGE_CANCELLED' }
+    return { message: 'EMAIL_CHANGE_CANCELLED', success: true }
   }
 
   async verifyChangeEmail(verifyChangeEmailDto: VerifyChangeEmailDto, userId?: string): Promise<UserResponse> {
@@ -296,7 +246,7 @@ export class UserService {
       throw new Error('INVALID_TOKEN')
     }
 
-    const user = await this.prisma.user.findUnique({ where: { id: userId } })
+    const user = await this.findOne({ where: { id: userId } })
     if (!user) {
       throw new Error('USER_DOES_NOT_EXIST')
     }
@@ -304,7 +254,7 @@ export class UserService {
       throw new Error(`USER_IS_${user.status.toUpperCase()}`)
     }
 
-    await this.prisma.user.update({
+    await this.prismaService.user.update({
       where: { id: userId },
       data: {
         email: user.new_email!,
@@ -314,15 +264,15 @@ export class UserService {
 
     await this.verificationTokenService.updateVerificationToken(verificationToken.id, { status: 'verified' })
 
-    const updatedUser = await this.prisma.user.findUnique({ where: { id: userId } })
+    const updatedUser = await this.findOne({ where: { id: userId } })
     if (!updatedUser) {
       throw new Error('USER_NOT_FOUND')
     }
     return {
       id: updatedUser.id,
       email: updatedUser.email,
-      first_name: updatedUser.first_name || undefined,
-      last_name: updatedUser.last_name || undefined,
+      first_name: updatedUser.first_name || null,
+      last_name: updatedUser.last_name || null,
       status: updatedUser.status
     }
   }
@@ -330,7 +280,7 @@ export class UserService {
   async setUserEmail(setUserEmailDto: SetUserEmailDto): Promise<UserResponse> {
     const { new_email, user_id } = setUserEmailDto
 
-    const existingUser = await this.prisma.user.findFirst({
+    const existingUser = await this.prismaService.user.findFirst({
       where: { OR: [{ email: new_email }, { new_email }] }
     })
 
@@ -338,12 +288,18 @@ export class UserService {
       throw new Error('NEW_EMAIL_IS_ALREADY_ASSOCIATED_WITH_A_USER')
     }
 
-    const user = await this.prisma.user.update({
+    const user = await this.prismaService.user.update({
       where: { id: user_id },
       data: { email: new_email, new_email: null }
     })
 
-    return { id: user.id, email: user.email }
+    return {
+      id: user.id,
+      email: user.email,
+      status: user.status,
+      first_name: user.first_name,
+      last_name: user.last_name
+    }
   }
 
   async changePassword(changePasswordDto: ChangePasswordDto, userId?: string): Promise<UserResponse> {
@@ -357,7 +313,7 @@ export class UserService {
       throw new Error('NEW_PASSWORD_IS_SAME_AS_OLD_PASSWORD')
     }
 
-    const user = await this.prisma.user.findUnique({ where: { id: userId } })
+    const user = await this.findOne({ where: { id: userId } })
     if (!user) {
       throw new Error('USER_DOES_NOT_EXIST')
     }
@@ -384,7 +340,7 @@ export class UserService {
     const hashedNewPassword = await this.commonService.hashPassword(new_password)
     const updatedOldPasswords = [...(oldPasswords.filter((p) => p !== null) as string[]).slice(-2), user.password!]
 
-    await this.prisma.user.update({
+    await this.prismaService.user.update({
       where: { id: userId },
       data: {
         password: hashedNewPassword,
@@ -392,7 +348,7 @@ export class UserService {
       }
     })
 
-    await this.authTokenService.deleteAuthTokens(userId)
+    await this.authTokenService.deleteAuthTokens({ where: { user_id: userId } })
 
     return {
       id: user.id,
@@ -407,7 +363,7 @@ export class UserService {
     const { password, user_id } = setUserPasswordDto
 
     const hashedPassword = await this.commonService.hashPassword(password)
-    const user = await this.prisma.user.update({
+    const user = await this.prismaService.user.update({
       where: { id: user_id },
       data: { password: hashedPassword }
     })
@@ -418,23 +374,23 @@ export class UserService {
   async forgotPassword(forgotPasswordDto: ForgotPasswordDto): Promise<MessageResponse> {
     const { email } = forgotPasswordDto
 
-    const user = await this.prisma.user.findUnique({ where: { email } })
+    const user = await this.findOne({ where: { email } })
     if (!user) {
       throw new NotFoundException('USER_DOES_NOT_EXIST')
     }
 
-    return { message: 'FORGOT_PASSWORD_EMAIL_SENT' }
+    return { message: 'FORGOT_PASSWORD_EMAIL_SENT', success: true }
   }
 
   async retryForgotPassword(forgotPasswordDto: ForgotPasswordDto): Promise<MessageResponse> {
     const { email } = forgotPasswordDto
 
-    const user = await this.prisma.user.findUnique({ where: { email } })
+    const user = await this.findOne({ where: { email } })
     if (!user) {
       throw new Error('USER_DOES_NOT_EXIST')
     }
 
-    return { message: 'FORGOT_PASSWORD_EMAIL_RESENT' }
+    return { message: 'FORGOT_PASSWORD_EMAIL_RESENT', success: true }
   }
 
   async verifyForgotPassword(verifyForgotPasswordDto: VerifyForgotPasswordDto): Promise<UserResponse> {
@@ -447,12 +403,12 @@ export class UserService {
     }
 
     const hashedPassword = await this.commonService.hashPassword(password)
-    const user = await this.prisma.user.update({
+    const user = await this.prismaService.user.update({
       where: { email },
       data: { password: hashedPassword }
     })
 
-    await this.authTokenService.deleteAuthTokens(user.id)
+    await this.authTokenService.deleteAuthTokens({ where: { user_id: user.id } })
 
     return {
       id: user.id,
@@ -482,7 +438,7 @@ export class UserService {
       throw new Error('UNAUTHORIZED')
     }
 
-    const user = await this.prisma.user.findUnique({ where: { id: userId } })
+    const user = await this.findOne({ where: { id: userId } })
     if (!user) {
       throw new Error('USER_IS_NOT_FOUND')
     }
@@ -503,7 +459,7 @@ export class UserService {
 
   async create(createUserDto: CreateUserDto) {
     const hashedPassword = await this.commonService.hashPassword(createUserDto.password)
-    return this.prisma.user.create({
+    return this.prismaService.user.create({
       data: {
         ...createUserDto,
         password: hashedPassword
@@ -512,7 +468,7 @@ export class UserService {
   }
 
   async findAll() {
-    return this.prisma.user.findMany({
+    return this.prismaService.user.findMany({
       include: {
         role_users: {
           include: {
@@ -523,27 +479,16 @@ export class UserService {
     })
   }
 
-  async findOne(id: string) {
-    const user = await this.prisma.user.findUnique({
-      where: { id },
-      include: {
-        role_users: {
-          include: {
-            role: true
-          }
-        }
-      }
+  async findOne(options: Prisma.UserFindUniqueArgs) {
+    return this.prismaService.user.findUnique({
+      ...options,
+      include: { ...options?.include, role_users: { include: { role: true } } }
     })
-    if (!user) {
-      throw new Error('USER_NOT_FOUND')
-    }
-
-    return user
   }
 
   async update(id: string, updateUserDto: UpdateUserDto) {
     try {
-      return this.prisma.user.update({
+      return this.prismaService.user.update({
         where: { id },
         data: updateUserDto
       })
@@ -557,7 +502,7 @@ export class UserService {
 
   async seedTestUsers() {
     const hashedPassword = await this.commonService.hashPassword('password')
-    return this.prisma.user.createMany({
+    return this.prismaService.user.createMany({
       data: [
         {
           email: 'test-1@test.com',
@@ -586,7 +531,7 @@ export class UserService {
 
   async remove(id: string) {
     try {
-      return this.prisma.user.delete({
+      return this.prismaService.user.delete({
         where: { id }
       })
     } catch (error: unknown) {
@@ -602,12 +547,12 @@ export class UserService {
       throw new Error('INVALID_ROLE_NAME')
     }
 
-    const role = await this.prisma.role.findUnique({ where: { name: roleName as RoleName } })
+    const role = await this.roleService.findOne({ where: { name: roleName as RoleName } })
     if (!role) {
       throw new Error('ROLE_NOT_FOUND')
     }
 
-    return this.prisma.roleUser.upsert({
+    return this.prismaService.roleUser.upsert({
       where: {
         user_id_role_id: {
           user_id: userId,
@@ -627,12 +572,12 @@ export class UserService {
       throw new Error('INVALID_ROLE_NAME')
     }
 
-    const role = await this.prisma.role.findUnique({ where: { name: roleName as RoleName } })
+    const role = await this.roleService.findOne({ where: { name: roleName as RoleName } })
     if (!role) {
       throw new Error('ROLE_NOT_FOUND')
     }
 
-    return this.prisma.roleUser.delete({
+    return this.prismaService.roleUser.delete({
       where: {
         user_id_role_id: {
           user_id: userId,

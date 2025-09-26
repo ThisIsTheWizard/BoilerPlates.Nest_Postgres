@@ -30,12 +30,15 @@ async function bootstrap() {
   SwaggerModule.setup(
     'api/docs',
     app,
-    SwaggerModule.createDocument(app, new DocumentBuilder().setTitle('API').setVersion('1.0').build())
+    SwaggerModule.createDocument(
+      app,
+      new DocumentBuilder().addBearerAuth().setTitle('Nest.js API Server').setVersion('v0.1.0.0').build()
+    )
   )
 
   await app.listen(process.env.PORT ?? 3000)
 
-  console.log(`====> Server running on port http://localhost:${process.env.PORT ?? 3000} <====`)
+  console.log(`====> Server running on port http://localhost:${process.env.PORT ?? 3000}/api/docs <====`)
 }
 
 bootstrap()
