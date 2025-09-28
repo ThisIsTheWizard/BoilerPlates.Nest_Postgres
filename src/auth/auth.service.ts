@@ -125,27 +125,23 @@ export class AuthService {
   async refreshToken(refreshTokenDto: RefreshTokenDto): Promise<TokenResponse> {
     const { access_token, refresh_token } = refreshTokenDto
 
-    const authToken = await this.authTokenService.getAuthToken({ where: { access_token, refresh_token } })
+    const authToken = await this.authTokenService.getAuthToken({ where: { refresh_token } })
     if (!authToken?.id) {
       throw new UnauthorizedException('INVALID_TOKEN')
     }
 
-    const decoded = this.commonService.decodeJWTToken(access_token) as { user_id: string }
-    const { user_id } = decoded || {}
-    const user: UserWithRoles | null = await this.userService.findOne({ where: { id: user_id } })
+    const user: UserWithRoles | null = await this.userService.findOne({ where: { id: authToken.user_id } })
     if (!user?.id) {
       throw new Error('USER_NOT_FOUND')
     }
 
-    const tokens = await this.authTokenService.createAuthTokensForUser({
+    await this.authTokenService.deleteAuthToken({ where: { id: authToken.id } })
+
+    return this.authTokenService.createAuthTokensForUser({
       email: user.email,
       roles: user.role_users.map((ru) => ru.role.name),
       user_id: user.id
     })
-
-    await this.authTokenService.deleteAuthToken({ where: { id: authToken.id } })
-
-    return tokens
   }
 
   async logout(token?: string): Promise<MessageResponse> {
@@ -349,6 +345,16 @@ export class AuthService {
     if (!user) {
       throw new NotFoundException('USER_DOES_NOT_EXIST')
     }
+
+    await this.verificationTokenService.createVerificationToken({
+      data: {
+        email: user.email,
+        expired_at: new Date(Date.now() + 1000 * 5 * 60), // 5 minutes
+        token: Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15),
+        type: 'forgot_password',
+        user_id: user.id
+      }
+    })
 
     return { message: 'FORGOT_PASSWORD_EMAIL_SENT', success: true }
   }
