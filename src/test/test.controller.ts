@@ -23,7 +23,7 @@ export class TestController {
     await this.prisma.user.deleteMany({})
 
     const roles = await this.roleService.seedSystemRoles()
-    const users = await this.userService.seedTestUsers()
+    const users = await this.userService.seedTestUsers(roles)
 
     return { roles, users }
   }

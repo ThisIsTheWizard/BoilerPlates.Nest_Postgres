@@ -17,9 +17,8 @@ services:
   pgadmin:
     image: dpage/pgadmin4
     container_name: postgres_pgadmin
-    environment:
-      PGADMIN_DEFAULT_EMAIL: admin@admin.com
-      PGADMIN_DEFAULT_PASSWORD: admin
+    env_file:
+      - .env
     ports:
       - '4000:80'
     depends_on:

@@ -1,5 +1,5 @@
 import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common'
-import { Prisma, RoleName } from '@prisma/client'
+import { Prisma, Role, RoleName } from '@prisma/client'
 
 import { TokenResponse } from '@/auth-token/auth-token.interface'
 import { AuthTokenService } from '@/auth-token/auth-token.service'
@@ -27,7 +27,7 @@ import {
 } from '@/user/user.dto'
 import { UserResponse, UserWithRoles } from '@/user/user.interface'
 import { VerificationTokenService } from '@/verification-token/verification-token.service'
-import { pick } from 'lodash'
+import { map, pick } from 'lodash'
 
 @Injectable()
 export class UserService {
@@ -153,7 +153,10 @@ export class UserService {
       throw new Error('USER_NOT_FOUND')
     }
 
-    return pick(user, ['id', 'email', 'first_name', 'last_name', 'status'])
+    return {
+      ...pick(user, ['id', 'email', 'first_name', 'last_name', 'status']),
+      roles: user.role_users.map((ru) => ru.role.name)
+    }
   }
 
   async logout(token?: string): Promise<MessageResponse> {
@@ -500,9 +503,10 @@ export class UserService {
     }
   }
 
-  async seedTestUsers() {
+  async seedTestUsers(roles: Role[]) {
+    const userRole = roles.find((r) => r.name === 'user')
     const hashedPassword = await this.commonService.hashPassword('password')
-    return this.prismaService.user.createMany({
+    const users = await this.prismaService.user.createManyAndReturn({
       data: [
         {
           email: 'test-1@test.com',
@@ -527,6 +531,11 @@ export class UserService {
         }
       ]
     })
+    await this.prismaService.roleUser.createManyAndReturn({
+      data: map(users, (u) => ({ user_id: u.id, role_id: userRole?.id! }))
+    })
+
+    return users
   }
 
   async remove(id: string) {

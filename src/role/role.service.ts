@@ -47,7 +47,7 @@ export class RoleService {
   }
 
   async seedSystemRoles() {
-    return this.prisma.role.createMany({
+    return this.prisma.role.createManyAndReturn({
       data: [{ name: 'admin' }, { name: 'developer' }, { name: 'moderator' }, { name: 'user' }],
       skipDuplicates: true
     })

@@ -67,7 +67,7 @@ export class PermissionService {
       }
     }
 
-    return this.prisma.permission.createMany({
+    return this.prisma.permission.createManyAndReturn({
       data: permissions,
       skipDuplicates: true
     })
