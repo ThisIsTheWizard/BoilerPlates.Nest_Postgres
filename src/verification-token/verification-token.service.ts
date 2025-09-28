@@ -16,10 +16,8 @@ export class VerificationTokenService {
     return this.prisma.verificationToken.create({ data })
   }
 
-  async findVerificationToken(email: string, token: string, type: 'user_verification' | 'forgot_password') {
-    return this.prisma.verificationToken.findFirst({
-      where: { email, token, type, status: 'unverified' }
-    })
+  async getVerificationToken(options: Prisma.VerificationTokenFindUniqueArgs) {
+    return this.prisma.verificationToken.findUnique(options)
   }
 
   async updateVerificationToken(id: string, data: { status: 'unverified' | 'verified' | 'cancelled' }) {
@@ -33,9 +31,9 @@ export class VerificationTokenService {
     return this.prisma.verificationToken.deleteMany(options)
   }
 
-  async cancelVerificationTokens(userId: string, type: 'user_verification' | 'forgot_password') {
+  async cancelVerificationTokens(user_id: string, type: 'user_verification' | 'forgot_password') {
     return this.prisma.verificationToken.updateMany({
-      where: { user_id: userId, type, status: 'unverified' },
+      where: { user_id, type, status: 'unverified' },
       data: { status: 'cancelled' }
     })
   }
@@ -48,9 +46,9 @@ export class VerificationTokenService {
     return this.prisma.verificationToken.create(options)
   }
 
-  async findVerificationTokenByUserId(userId: string, token: string, type: 'user_verification' | 'forgot_password') {
+  async findVerificationTokenByUserId(user_id: string, token: string, type: 'user_verification' | 'forgot_password') {
     return this.prisma.verificationToken.findFirst({
-      where: { user_id: userId, token, type, status: 'unverified' }
+      where: { user_id, token, type, status: 'unverified' }
     })
   }
 }

@@ -1,17 +1,24 @@
 import { Module } from '@nestjs/common'
 
 import { AuthTokenService } from '@/auth-token/auth-token.service'
+import { AuthController } from '@/auth/auth.controller'
+import { AuthService } from '@/auth/auth.service'
 import { CommonService } from '@/common/common.service'
 import { PrismaService } from '@/prisma/prisma.service'
-import { RoleModule } from '@/role/role.module'
-import { UserController } from '@/user/user.controller'
+import { RoleService } from '@/role/role.service'
 import { UserService } from '@/user/user.service'
 import { VerificationTokenService } from '@/verification-token/verification-token.service'
 
 @Module({
-  imports: [RoleModule],
-  controllers: [UserController],
-  providers: [UserService, PrismaService, CommonService, AuthTokenService, VerificationTokenService],
-  exports: [UserService]
+  controllers: [AuthController],
+  providers: [
+    AuthService,
+    AuthTokenService,
+    CommonService,
+    PrismaService,
+    RoleService,
+    UserService,
+    VerificationTokenService
+  ]
 })
-export class UserModule {}
+export class AuthModule {}

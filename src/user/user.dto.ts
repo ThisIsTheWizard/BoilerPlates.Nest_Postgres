@@ -187,10 +187,9 @@ export class UpdateUserDto {
   @IsString()
   last_name?: string
 
-  @ApiProperty()
   @IsOptional()
   @IsString()
-  new_email?: string
+  new_email?: string | null
 
   @ApiProperty()
   @IsOptional()

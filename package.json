@@ -5,6 +5,9 @@
   "main": "src/main.ts",
   "author": "The Wizard",
   "license": "MIT",
+  "prisma": {
+    "seed": "ts-node prisma/seed.ts"
+  },
   "scripts": {
     "compose:dev-down": "docker compose -f docker-compose.dev.yml down -v",
     "compose:dev-up": "docker compose -f docker-compose.dev.yml up -d --build",

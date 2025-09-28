@@ -75,8 +75,8 @@ describe('RBAC System Integration (e2e)', () => {
   describe('Permission Management', () => {
     it('should assign permission to role with can_do_the_action true', async () => {
       const response = await api.post('/roles/permissions/assign', {
-        roleId: userRole.id,
-        permissionId: createUserPermission.id,
+        role_id: userRole.id,
+        permission_id: createUserPermission.id,
         canDoAction: true
       })
       expect(response.status).toBe(201)
@@ -84,8 +84,8 @@ describe('RBAC System Integration (e2e)', () => {
 
     it('should update permission can_do_the_action to false', async () => {
       const response = await api.patch('/roles/permissions/update', {
-        roleId: userRole.id,
-        permissionId: createUserPermission.id,
+        role_id: userRole.id,
+        permission_id: createUserPermission.id,
         canDoAction: false
       })
       expect(response.status).toBe(200)
@@ -93,8 +93,8 @@ describe('RBAC System Integration (e2e)', () => {
 
     it('should revoke permission from role', async () => {
       const response = await api.post('/roles/permissions/revoke', {
-        roleId: userRole.id,
-        permissionId: createUserPermission.id
+        role_id: userRole.id,
+        permission_id: createUserPermission.id
       })
       expect(response.status).toBe(201)
     })

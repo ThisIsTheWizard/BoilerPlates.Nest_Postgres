@@ -68,8 +68,8 @@ async function main() {
   }
 
   // Assign permissions to roles
-  for (const [roleName, rolePerms] of Object.entries(rolePermissions)) {
-    const role = roles.find((r) => r.name === roleName)
+  for (const [role_name, rolePerms] of Object.entries(rolePermissions)) {
+    const role = roles.find((r) => r.name === role_name)
     if (role) {
       for (const { permission_id, can_do_the_action } of rolePerms) {
         await prisma.rolePermission.upsert({
@@ -89,8 +89,6 @@ async function main() {
       }
     }
   }
-
-  console.log('Seed completed successfully')
 }
 
 main()

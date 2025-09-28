@@ -185,14 +185,14 @@ describe('UserController (e2e)', () => {
     })
   })
 
-  describe('/users/:id/roles/:roleName (POST)', () => {
+  describe('/users/:id/roles/:role_name (POST)', () => {
     it('should assign role to user', async () => {
       const response = await api.post('/users/1/roles/admin')
       expect(response.status).toBe(201)
     })
   })
 
-  describe('/users/:id/roles/:roleName (DELETE)', () => {
+  describe('/users/:id/roles/:role_name (DELETE)', () => {
     it('should revoke role from user', async () => {
       const response = await api.delete('/users/1/roles/admin')
       expect(response.status).toBe(200)

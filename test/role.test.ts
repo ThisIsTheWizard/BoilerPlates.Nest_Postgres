@@ -121,8 +121,8 @@ describe('RoleController (e2e)', () => {
       const permission = permissionsResponse.data[0]
 
       const response = await api.post('/roles/permissions/assign', {
-        roleId: testRoleId,
-        permissionId: permission.id,
+        role_id: testRoleId,
+        permission_id: permission.id,
         canDoAction: true
       })
       expect(response.status).toBe(201)
@@ -132,8 +132,8 @@ describe('RoleController (e2e)', () => {
   describe('/roles/permissions/revoke (POST)', () => {
     it('should revoke permission from role', async () => {
       const response = await api.post('/roles/permissions/revoke', {
-        roleId: '1',
-        permissionId: '1'
+        role_id: '1',
+        permission_id: '1'
       })
       expect(response.status).toBe(201)
     })
@@ -142,8 +142,8 @@ describe('RoleController (e2e)', () => {
   describe('/roles/permissions/update (PATCH)', () => {
     it('should update role permission', async () => {
       const response = await api.patch('/roles/permissions/update', {
-        roleId: '1',
-        permissionId: '1',
+        role_id: '1',
+        permission_id: '1',
         canDoAction: false
       })
       expect(response.status).toBe(200)
