@@ -1,6 +1,6 @@
 import { PermissionAction, PermissionModule } from '@prisma/client'
 
-import { api, getAuthHeaders, loginAndGetTokens, resetDatabase } from '../setup'
+import { api, getAuthHeaders, loginAndGetTokens, resetDatabase } from './setup'
 
 describe('PermissionController (integration)', () => {
   let accessToken: string

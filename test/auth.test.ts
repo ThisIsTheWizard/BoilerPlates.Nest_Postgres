@@ -1,6 +1,6 @@
 import { RoleName } from '@prisma/client'
 
-import { api, getAuthHeaders, loginAndGetTokens, prisma, resetDatabase } from '../setup'
+import { api, getAuthHeaders, loginAndGetTokens, prisma, resetDatabase } from './setup'
 
 describe('AuthController (integration)', () => {
   beforeEach(async () => {
@@ -204,7 +204,11 @@ describe('AuthController (integration)', () => {
     it('error', async () => {
       const { access_token } = await loginAndGetTokens('test-1@test.com', 'password')
 
-      const response = await api.post('/auth/cancel-change-email', { email: 'missing@example.com' }, getAuthHeaders(access_token))
+      const response = await api.post(
+        '/auth/cancel-change-email',
+        { email: 'missing@example.com' },
+        getAuthHeaders(access_token)
+      )
 
       expect(response.status).toBe(500)
     })
@@ -241,7 +245,11 @@ describe('AuthController (integration)', () => {
 
     it('error', async () => {
       const { access_token } = await loginAndGetTokens('test-1@test.com', 'password')
-      const response = await api.post('/auth/verify-change-email', { token: 'invalid-token' }, getAuthHeaders(access_token))
+      const response = await api.post(
+        '/auth/verify-change-email',
+        { token: 'invalid-token' },
+        getAuthHeaders(access_token)
+      )
 
       expect(response.status).toBe(500)
     })

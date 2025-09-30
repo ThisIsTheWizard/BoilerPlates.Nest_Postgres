@@ -1,6 +1,6 @@
 import { PermissionAction, PermissionModule, RoleName } from '@prisma/client'
 
-import { api, getAuthHeaders, loginAndGetTokens, prisma, resetDatabase } from '../setup'
+import { api, getAuthHeaders, loginAndGetTokens, prisma, resetDatabase } from './setup'
 
 describe('RoleController (integration)', () => {
   let accessToken: string
@@ -18,22 +18,14 @@ describe('RoleController (integration)', () => {
         await api.delete(`/roles/${developerRole.id}`, getAuthHeaders(accessToken))
       }
 
-      const response = await api.post(
-        '/roles',
-        { name: RoleName.developer },
-        getAuthHeaders(accessToken)
-      )
+      const response = await api.post('/roles', { name: RoleName.developer }, getAuthHeaders(accessToken))
 
       expect(response.status).toBe(201)
       expect(response.data).toMatchObject({ name: RoleName.developer })
     })
 
     it('error', async () => {
-      const response = await api.post(
-        '/roles',
-        { name: RoleName.user },
-        getAuthHeaders(accessToken)
-      )
+      const response = await api.post('/roles', { name: RoleName.user }, getAuthHeaders(accessToken))
 
       expect(response.status).toBe(500)
     })
@@ -75,11 +67,7 @@ describe('RoleController (integration)', () => {
       const role = await prisma.role.findFirst({ where: { name: RoleName.moderator } })
       expect(role).not.toBeNull()
 
-      const response = await api.patch(
-        `/roles/${role!.id}`,
-        { name: RoleName.moderator },
-        getAuthHeaders(accessToken)
-      )
+      const response = await api.patch(`/roles/${role!.id}`, { name: RoleName.moderator }, getAuthHeaders(accessToken))
 
       expect(response.status).toBe(200)
       expect(response.data).toMatchObject({ id: role!.id, name: RoleName.moderator })

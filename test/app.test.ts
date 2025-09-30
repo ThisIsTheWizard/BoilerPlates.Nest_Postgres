@@ -1,4 +1,4 @@
-import { api, resetDatabase } from '../setup'
+import { api, resetDatabase } from './setup'
 
 describe('AppController (integration)', () => {
   beforeEach(async () => {

@@ -1,4 +1,4 @@
-import { api, getAuthHeaders, loginAndGetTokens, resetDatabase } from '../setup'
+import { api, getAuthHeaders, loginAndGetTokens, resetDatabase } from './setup'
 
 describe('UserController (integration)', () => {
   let accessToken: string
@@ -92,22 +92,14 @@ describe('UserController (integration)', () => {
       expect(created.status).toBe(201)
       const userId = created.data.id
 
-      const response = await api.patch(
-        `/users/${userId}`,
-        { first_name: 'Updated' },
-        getAuthHeaders(accessToken)
-      )
+      const response = await api.patch(`/users/${userId}`, { first_name: 'Updated' }, getAuthHeaders(accessToken))
 
       expect(response.status).toBe(200)
       expect(response.data).toMatchObject({ first_name: 'Updated' })
     })
 
     it('error', async () => {
-      const response = await api.patch(
-        '/users/non-existent-id',
-        { first_name: 'Updated' },
-        getAuthHeaders(accessToken)
-      )
+      const response = await api.patch('/users/non-existent-id', { first_name: 'Updated' }, getAuthHeaders(accessToken))
 
       expect(response.status).toBe(500)
     })
