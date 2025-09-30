@@ -1,35 +1,68 @@
-import axios from 'axios'
+import path from 'path'
 
-const api = axios.create({
-  baseURL: `http://localhost:${process.env.PORT || 8000}`,
-  timeout: 10000
+import axios from 'axios'
+import { PrismaClient } from '@prisma/client'
+import { config } from 'dotenv'
+
+config({ path: path.resolve(__dirname, '..', '.env.test'), override: false })
+
+const resolveDatabaseUrl = () => {
+  const fallback = 'postgres://postgres:postgres@127.0.0.1:5432/postgres'
+  let databaseUrl = process.env.E2E_DATABASE_URL ?? process.env.DATABASE_URL ?? fallback
+
+  try {
+    const parsed = new URL(databaseUrl)
+    if (!process.env.E2E_DATABASE_URL && ['postgres', 'postgres_test'].includes(parsed.hostname)) {
+      parsed.hostname = '127.0.0.1'
+      databaseUrl = parsed.toString()
+    }
+  } catch (error) {
+    databaseUrl = fallback
+  }
+
+  return databaseUrl
+}
+
+const baseURL = `http://127.0.0.1:${process.env.PORT || 8000}`
+
+export const api = axios.create({
+  baseURL,
+  timeout: 15000,
+  validateStatus: () => true
 })
 
-let authToken = null
-
-beforeAll(async () => {
-  try {
-    // Seed roles and permissions
-    await api.post('/roles/seed')
-    await api.post('/permissions/seed')
-
-    // Create test user
-    await api.post('/users/register', {
-      email: 'test@test.com',
-      password: 'Test123!@#',
-      first_name: 'Test',
-      last_name: 'User'
-    })
-
-    // Login to get auth token
-    const loginResponse = await api.post('/users/login', {
-      email: 'test@test.com',
-      password: 'Test123!@#'
-    })
-    authToken = loginResponse?.data?.token
-  } catch (error) {
-    // Ignore setup errors for now
+export const prisma = new PrismaClient({
+  datasources: {
+    db: { url: resolveDatabaseUrl() }
   }
 })
 
-export { api, authToken }
+export const resetDatabase = async () => {
+  const response = await api.post('/test/setup')
+  if (response.status >= 400) {
+    throw new Error(`Failed to reset database: ${response.status}`)
+  }
+  return response.data
+}
+
+export const getAuthHeaders = (accessToken: string) => ({
+  headers: {
+    Authorization: `Bearer ${accessToken}`
+  }
+})
+
+export const loginAndGetTokens = async (email: string, password: string) => {
+  const response = await api.post('/auth/login', { email, password })
+  if (response.status >= 400) {
+    throw new Error(`Login failed for ${email}: ${response.status}`)
+  }
+  return response.data as { access_token: string; refresh_token: string }
+}
+
+beforeAll(async () => {
+  await prisma.$connect()
+})
+
+afterAll(async () => {
+  await prisma.$disconnect()
+})

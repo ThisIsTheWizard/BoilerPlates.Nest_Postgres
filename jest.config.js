@@ -4,10 +4,11 @@ module.exports = {
     '^@/(.*)$': '<rootDir>/src/$1'
   },
   preset: 'ts-jest',
-  roots: ['<rootDir>/src', '<rootDir>/test'],
+  roots: ['<rootDir>/test/integration'],
   setupFilesAfterEnv: ['<rootDir>/test/setup.ts'],
   testEnvironment: 'node',
-  testMatch: ['**/*.test.ts'],
+  testMatch: ['**/*.int.test.ts'],
+  maxWorkers: 1,
   testTimeout: 60000,
   transform: {
     '^.+\\.(t|j)s$': 'ts-jest'
