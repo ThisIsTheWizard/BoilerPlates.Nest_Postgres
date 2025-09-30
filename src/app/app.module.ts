@@ -29,6 +29,7 @@ export class AppModule implements NestModule {
     consumer
       .apply(AuthMiddleware)
       .exclude(
+        { method: RequestMethod.GET, path: '/' },
         { method: RequestMethod.POST, path: 'auth/login' },
         { method: RequestMethod.POST, path: 'auth/forgot-password' },
         { method: RequestMethod.POST, path: 'auth/retry-forgot-password' },
@@ -37,7 +38,8 @@ export class AppModule implements NestModule {
         { method: RequestMethod.POST, path: 'auth/refresh-token' },
         { method: RequestMethod.POST, path: 'auth/register' },
         { method: RequestMethod.POST, path: 'auth/resend-verification-email' },
-        { method: RequestMethod.POST, path: 'auth/verify-user-email' }
+        { method: RequestMethod.POST, path: 'auth/verify-user-email' },
+        { method: RequestMethod.POST, path: 'test/setup' }
       )
       .forRoutes('*')
   }
