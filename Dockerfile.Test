@@ -17,6 +17,6 @@ COPY . .
 
 RUN pnpm run nest:build
 
-CMD ["sh", "-c", "pnpm db:generate && pnpm db:push && pnpm nest:start"]
+CMD ["sh", "-c", "pnpm db:generate && pnpm db:push && pnpm nest:dev"]
 
 EXPOSE 8000

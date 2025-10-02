@@ -11,7 +11,7 @@
     "compose:prod-down": "docker compose -f docker-compose.prod.yml down -v",
     "compose:prod-up": "docker compose -f docker-compose.prod.yml up -d --build",
     "compose:test-down": "docker compose -f docker-compose.test.yml down -v --remove-orphans",
-    "compose:test-up": "docker compose -f docker-compose.test.yml up -d --build --wait && sleep 10",
+    "compose:test-up": "docker compose -f docker-compose.test.yml up -d --build --wait",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev",
