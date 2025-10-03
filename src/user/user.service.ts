@@ -2,21 +2,17 @@ import { Injectable } from '@nestjs/common'
 import { Prisma, Role, RoleName } from '@prisma/client'
 import { map } from 'lodash'
 
-import { AuthTokenService } from '@/auth-token/auth-token.service'
 import { CommonService } from '@/common/common.service'
 import { PrismaService } from '@/prisma/prisma.service'
 import { RoleService } from '@/role/role.service'
 import { CreateUserDto, UpdateUserDto } from '@/user/user.dto'
-import { VerificationTokenService } from '@/verification-token/verification-token.service'
 
 @Injectable()
 export class UserService {
   constructor(
-    private authTokenService: AuthTokenService,
     private commonService: CommonService,
     private prismaService: PrismaService,
-    private roleService: RoleService,
-    private verificationTokenService: VerificationTokenService
+    private roleService: RoleService
   ) {}
 
   async create(createUserDto: CreateUserDto) {
@@ -63,7 +59,13 @@ export class UserService {
   }
 
   async seedTestUsers(roles: Role[]) {
+    const adminRole = roles.find((r) => r.name === 'admin')
+    const developerRole = roles.find((r) => r.name === 'developer')
     const userRole = roles.find((r) => r.name === 'user')
+    if (!userRole) {
+      throw new Error('USER_ROLE_NOT_FOUND')
+    }
+
     const hashedPassword = await this.commonService.hashPassword('password')
     const users = await this.prismaService.user.createManyAndReturn({
       data: [
@@ -90,9 +92,16 @@ export class UserService {
         }
       ]
     })
-    await this.prismaService.roleUser.createManyAndReturn({
-      data: map(users, (u) => ({ user_id: u.id, role_id: userRole?.id! }))
-    })
+    const roleAssignments = map(users, (u) => ({ user_id: u.id, role_id: userRole.id! }))
+
+    if (users[0] && adminRole) {
+      roleAssignments.push({ role_id: adminRole.id, user_id: users[0].id })
+    }
+    if (users[1] && developerRole) {
+      roleAssignments.push({ role_id: developerRole.id, user_id: users[1].id })
+    }
+
+    await this.prismaService.roleUser.createManyAndReturn({ data: roleAssignments, skipDuplicates: true })
 
     return users
   }
