@@ -110,7 +110,7 @@ describe('AuthController (integration)', () => {
         email: 'admin@test.com',
         password: 'password'
       })
-      console.log('Login response:', response.status, response.data, response)
+
       expect(response.status).toBe(201)
       expect(response.data).toHaveProperty('access_token')
       expect(response.data).toHaveProperty('refresh_token')
