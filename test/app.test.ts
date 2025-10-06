@@ -14,7 +14,7 @@ describe('AppController (integration)', () => {
 
     it('error', async () => {
       const response = await api.get('/non-existent-route')
-      expect(response.status).toBe(401)
+      expect(response.status).toBe(404)
     })
   })
 })

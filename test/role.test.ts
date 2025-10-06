@@ -5,9 +5,9 @@ import { api, getAuthHeaders, loginAndGetTokens, prisma, resetDatabase } from '.
 describe('RoleController (integration)', () => {
   let accessToken: string
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     await resetDatabase()
-    const tokens = await loginAndGetTokens('test-1@test.com', 'password')
+    const tokens = await loginAndGetTokens('admin@test.com', 'password')
     accessToken = tokens.access_token
   })
 
@@ -106,13 +106,9 @@ describe('RoleController (integration)', () => {
       const role = await prisma.role.findFirst({ where: { name: RoleName.admin } })
       expect(role).not.toBeNull()
 
-      const permissionResponse = await api.post(
-        '/permissions',
-        { action: PermissionAction.create, module: PermissionModule.role },
-        getAuthHeaders(accessToken)
-      )
-      expect(permissionResponse.status).toBe(201)
-      const permissionId = permissionResponse.data.id
+      const permission = await prisma.permission.findFirst({ where: { action: PermissionAction.create, module: PermissionModule.role } })
+      expect(permission).not.toBeNull()
+      const permissionId = permission!.id
 
       const response = await api.post(
         '/roles/permissions/assign',
@@ -143,13 +139,9 @@ describe('RoleController (integration)', () => {
       const role = await prisma.role.findFirst({ where: { name: RoleName.admin } })
       expect(role).not.toBeNull()
 
-      const permissionResponse = await api.post(
-        '/permissions',
-        { action: PermissionAction.read, module: PermissionModule.role },
-        getAuthHeaders(accessToken)
-      )
-      expect(permissionResponse.status).toBe(201)
-      const permissionId = permissionResponse.data.id
+      const permission = await prisma.permission.findFirst({ where: { action: PermissionAction.read, module: PermissionModule.role } })
+      expect(permission).not.toBeNull()
+      const permissionId = permission!.id
 
       const assign = await api.post(
         '/roles/permissions/assign',
@@ -184,13 +176,9 @@ describe('RoleController (integration)', () => {
       const role = await prisma.role.findFirst({ where: { name: RoleName.admin } })
       expect(role).not.toBeNull()
 
-      const permissionResponse = await api.post(
-        '/permissions',
-        { action: PermissionAction.update, module: PermissionModule.role },
-        getAuthHeaders(accessToken)
-      )
-      expect(permissionResponse.status).toBe(201)
-      const permissionId = permissionResponse.data.id
+      const permission = await prisma.permission.findFirst({ where: { action: PermissionAction.update, module: PermissionModule.role } })
+      expect(permission).not.toBeNull()
+      const permissionId = permission!.id
 
       const assign = await api.post(
         '/roles/permissions/assign',

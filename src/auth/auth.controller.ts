@@ -159,7 +159,7 @@ export class AuthController {
   @Post('revoke-role')
   @UseGuards(AuthGuard, RolesGuard, PermissionsGuard)
   @Roles(RoleName.admin, RoleName.developer)
-  @Permissions('user:update')
+  @Permissions('user.update')
   @ApiBearerAuth()
   revokeRole(@Body() revokeRoleDto: RevokeRoleDto) {
     return this.authService.revokeRole(revokeRoleDto)

@@ -1,11 +1,10 @@
 import { Controller, Post } from '@nestjs/common'
 
-import { PermissionAction, PermissionModule, RoleName } from '@prisma/client'
-
 import { PermissionService } from '@/permission/permission.service'
 import { PrismaService } from '@/prisma/prisma.service'
 import { RoleService } from '@/role/role.service'
 import { UserService } from '@/user/user.service'
+import { Permission, Role, RolePermission } from '@prisma/client'
 
 @Controller('test')
 export class TestController {
@@ -38,51 +37,25 @@ export class TestController {
     return { roles, users }
   }
 
-  private async seedRolePermissions(
-    roles: Awaited<ReturnType<typeof this.roleService.seedSystemRoles>>,
-    permissions: Awaited<ReturnType<typeof this.permissionService.seedPermissions>>
-  ) {
-    const permissionByKey = new Map<string, (typeof permissions)[number]>()
-    permissions.forEach((permission) => {
-      permissionByKey.set(`${permission.module}:${permission.action}`, permission)
-    })
+  private async seedRolePermissions(roles: Role[], permissions: Permission[]) {
+    const rolePermissions: RolePermission[] = []
 
-    const roleByName = new Map<RoleName, (typeof roles)[number]>()
-    roles.forEach((role) => {
-      if (role) {
-        roleByName.set(role.name, role)
-      }
-    })
+    for (const role of roles) {
+      if (!role?.id) continue
 
-    const userManagementPermissions: Array<{ module: PermissionModule; action: PermissionAction }> = [
-      { module: PermissionModule.user, action: PermissionAction.create },
-      { module: PermissionModule.user, action: PermissionAction.read },
-      { module: PermissionModule.user, action: PermissionAction.update },
-      { module: PermissionModule.user, action: PermissionAction.delete }
-    ]
+      for (const permission of permissions) {
+        if (!permission?.id) continue
 
-    const privilegedRoles: RoleName[] = [RoleName.admin, RoleName.developer]
-
-    for (const roleName of privilegedRoles) {
-      const role = roleByName.get(roleName)
-      if (!role?.id) {
-        continue
-      }
-
-      await Promise.all(
-        userManagementPermissions.map(async ({ module, action }) => {
-          const permission = permissionByKey.get(`${module}:${action}`)
-          if (!permission?.id) {
-            return
-          }
-
-          await this.roleService.assignPermission({
-            role_id: role.id,
-            permission_id: permission.id,
-            can_do_the_action: true
-          })
+        const rolePermission = await this.roleService.assignPermission({
+          role_id: role.id,
+          permission_id: permission.id,
+          can_do_the_action: ['admin', 'developer'].includes(role.name)
         })
-      )
+
+        rolePermissions.push(rolePermission)
+      }
     }
+
+    return rolePermissions
   }
 }

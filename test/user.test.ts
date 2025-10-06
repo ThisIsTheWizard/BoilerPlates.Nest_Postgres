@@ -3,9 +3,9 @@ import { api, getAuthHeaders, loginAndGetTokens, resetDatabase } from './setup'
 describe('UserController (integration)', () => {
   let accessToken: string
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     await resetDatabase()
-    const tokens = await loginAndGetTokens('test-1@test.com', 'password')
+    const tokens = await loginAndGetTokens('admin@test.com', 'password')
     accessToken = tokens.access_token
   })
 

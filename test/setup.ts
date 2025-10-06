@@ -1,39 +1,19 @@
-import path from 'path'
-
-import axios from 'axios'
 import { PrismaClient } from '@prisma/client'
+import axios from 'axios'
 import { config } from 'dotenv'
+import path from 'path'
 
 config({ path: path.resolve(__dirname, '..', '.env.test'), override: false })
 
-const resolveDatabaseUrl = () => {
-  const fallback = 'postgres://postgres:postgres@127.0.0.1:5432/postgres'
-  let databaseUrl = process.env.E2E_DATABASE_URL ?? process.env.DATABASE_URL ?? fallback
-
-  try {
-    const parsed = new URL(databaseUrl)
-    if (!process.env.E2E_DATABASE_URL && ['postgres', 'postgres_test'].includes(parsed.hostname)) {
-      parsed.hostname = '127.0.0.1'
-      databaseUrl = parsed.toString()
-    }
-  } catch (error) {
-    databaseUrl = fallback
-  }
-
-  return databaseUrl
-}
-
-const baseURL = `http://127.0.0.1:${process.env.PORT || 8000}`
-
 export const api = axios.create({
-  baseURL,
+  baseURL: `http://127.0.0.1:${process.env.PORT || 8000}`,
   timeout: 15000,
   validateStatus: () => true
 })
 
 export const prisma = new PrismaClient({
   datasources: {
-    db: { url: resolveDatabaseUrl() }
+    db: { url: (process.env.DATABASE_URL || '')?.replace('postgres_test', 'localhost') }
   }
 })
 
