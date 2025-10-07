@@ -25,7 +25,7 @@ services:
     env_file:
       - .env.test
     ports:
-      - '8000:8000'
+      - '8001:8001'
     healthcheck:
       test:
         [
@@ -36,10 +36,21 @@ services:
       timeout: 5s
       retries: 5
       start_period: 10s
-    volumes:
-      - node_server_test_data:/app
-      - /app/node_modules
+
+  test_runner:
+    build:
+      context: .
+      dockerfile: Dockerfile.Test
+    container_name: test_runner_container
+    restart: 'no'
+    env_file:
+      - .env.test
+    environment:
+      - DOCKER_TEST=true
+    command: ['pnpx', 'jest']
+    depends_on:
+      node_server_test:
+        condition: service_healthy
 
 volumes:
-  node_server_test_data:
   postgres_test_data:
