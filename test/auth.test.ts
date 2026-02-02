@@ -280,7 +280,7 @@ describe('AuthController (integration)', () => {
 
       const response = await api.post(
         '/auth/set-user-email',
-        { new_email: 'test-2@test.com', user_id: user!.id },
+        { new_email: 'test-2@wizardcld.com', user_id: user!.id },
         getAuthHeaders(access_token)
       )
 
