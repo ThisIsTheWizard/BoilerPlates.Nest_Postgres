@@ -7,7 +7,7 @@ describe('RoleController (integration)', () => {
 
   beforeAll(async () => {
     await resetDatabase()
-    const tokens = await loginAndGetTokens('admin@test.com', 'password')
+    const tokens = await loginAndGetTokens('admin@wizardcld.com', 'password')
     accessToken = tokens.access_token
   })
 

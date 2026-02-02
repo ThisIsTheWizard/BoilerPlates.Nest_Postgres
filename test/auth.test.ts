@@ -107,7 +107,7 @@ describe('AuthController (integration)', () => {
   describe('POST /auth/login', () => {
     it('success', async () => {
       const response = await api.post('/auth/login', {
-        email: 'admin@test.com',
+        email: 'admin@wizardcld.com',
         password: 'password'
       })
 
@@ -118,7 +118,7 @@ describe('AuthController (integration)', () => {
 
     it('error', async () => {
       const response = await api.post('/auth/login', {
-        email: 'admin@test.com',
+        email: 'admin@wizardcld.com',
         password: 'wrong-password'
       })
 
@@ -128,7 +128,7 @@ describe('AuthController (integration)', () => {
 
   describe('POST /auth/refresh-token', () => {
     it('success', async () => {
-      const tokens = await loginAndGetTokens('admin@test.com', 'password')
+      const tokens = await loginAndGetTokens('admin@wizardcld.com', 'password')
 
       await new Promise((resolve) => setTimeout(resolve, 1100))
 
@@ -153,7 +153,7 @@ describe('AuthController (integration)', () => {
 
   describe('POST /auth/logout', () => {
     it('success', async () => {
-      const { access_token } = await loginAndGetTokens('admin@test.com', 'password')
+      const { access_token } = await loginAndGetTokens('admin@wizardcld.com', 'password')
 
       const response = await api.post('/auth/logout', {}, getAuthHeaders(access_token))
 
@@ -169,20 +169,20 @@ describe('AuthController (integration)', () => {
 
   describe('POST /auth/change-email', () => {
     it('success', async () => {
-      const { access_token } = await loginAndGetTokens('admin@test.com', 'password')
+      const { access_token } = await loginAndGetTokens('admin@wizardcld.com', 'password')
       const newEmail = `changed-${Date.now()}@example.com`
 
       const response = await api.post('/auth/change-email', { email: newEmail }, getAuthHeaders(access_token))
 
       expect(response.status).toBe(201)
-      expect(response.data).toMatchObject({ id: expect.any(String), email: 'admin@test.com' })
+      expect(response.data).toMatchObject({ id: expect.any(String), email: 'admin@wizardcld.com' })
 
-      const updatedUser = await prisma.user.findFirst({ where: { email: 'admin@test.com' } })
+      const updatedUser = await prisma.user.findFirst({ where: { email: 'admin@wizardcld.com' } })
       expect(updatedUser?.new_email).toBe(newEmail)
     })
 
     it('error', async () => {
-      const { access_token } = await loginAndGetTokens('admin@test.com', 'password')
+      const { access_token } = await loginAndGetTokens('admin@wizardcld.com', 'password')
 
       const response = await api.post('/auth/change-email', { email: 'invalid-email' }, getAuthHeaders(access_token))
 
@@ -192,7 +192,7 @@ describe('AuthController (integration)', () => {
 
   describe('POST /auth/cancel-change-email', () => {
     it('success', async () => {
-      const { access_token } = await loginAndGetTokens('admin@test.com', 'password')
+      const { access_token } = await loginAndGetTokens('admin@wizardcld.com', 'password')
       const newEmail = `cancel-${Date.now()}@example.com`
       await api.post('/auth/change-email', { email: newEmail }, getAuthHeaders(access_token))
 
@@ -203,7 +203,7 @@ describe('AuthController (integration)', () => {
     })
 
     it('error', async () => {
-      const { access_token } = await loginAndGetTokens('admin@test.com', 'password')
+      const { access_token } = await loginAndGetTokens('admin@wizardcld.com', 'password')
 
       const response = await api.post(
         '/auth/cancel-change-email',
@@ -217,10 +217,10 @@ describe('AuthController (integration)', () => {
 
   describe('POST /auth/verify-change-email', () => {
     it('success', async () => {
-      const user = await prisma.user.findFirst({ where: { email: 'admin@test.com' } })
+      const user = await prisma.user.findFirst({ where: { email: 'admin@wizardcld.com' } })
       expect(user).not.toBeNull()
 
-      const { access_token } = await loginAndGetTokens('admin@test.com', 'password')
+      const { access_token } = await loginAndGetTokens('admin@wizardcld.com', 'password')
       const newEmail = `verify-change-${Date.now()}@example.com`
       await api.post('/auth/change-email', { email: newEmail }, getAuthHeaders(access_token))
 
@@ -245,7 +245,7 @@ describe('AuthController (integration)', () => {
     })
 
     it('error', async () => {
-      const { access_token } = await loginAndGetTokens('admin@test.com', 'password')
+      const { access_token } = await loginAndGetTokens('admin@wizardcld.com', 'password')
       const response = await api.post(
         '/auth/verify-change-email',
         { token: 'invalid-token' },
@@ -258,8 +258,8 @@ describe('AuthController (integration)', () => {
 
   describe('POST /auth/set-user-email', () => {
     it('success', async () => {
-      const { access_token } = await loginAndGetTokens('admin@test.com', 'password')
-      const user = await prisma.user.findFirst({ where: { email: 'admin@test.com' } })
+      const { access_token } = await loginAndGetTokens('admin@wizardcld.com', 'password')
+      const user = await prisma.user.findFirst({ where: { email: 'admin@wizardcld.com' } })
       expect(user).not.toBeNull()
       const newEmail = `set-email-${Date.now()}@example.com`
 
@@ -274,8 +274,8 @@ describe('AuthController (integration)', () => {
     })
 
     it('error', async () => {
-      const { access_token } = await loginAndGetTokens('admin@test.com', 'password')
-      const user = await prisma.user.findFirst({ where: { email: 'admin@test.com' } })
+      const { access_token } = await loginAndGetTokens('admin@wizardcld.com', 'password')
+      const user = await prisma.user.findFirst({ where: { email: 'admin@wizardcld.com' } })
       expect(user).not.toBeNull()
 
       const response = await api.post(
@@ -290,7 +290,7 @@ describe('AuthController (integration)', () => {
 
   describe('POST /auth/change-password', () => {
     it('success', async () => {
-      const { access_token } = await loginAndGetTokens('admin@test.com', 'password')
+      const { access_token } = await loginAndGetTokens('admin@wizardcld.com', 'password')
 
       const response = await api.post(
         '/auth/change-password',
@@ -299,11 +299,11 @@ describe('AuthController (integration)', () => {
       )
 
       expect(response.status).toBe(201)
-      expect(response.data).toMatchObject({ email: 'admin@test.com', id: expect.any(String) })
+      expect(response.data).toMatchObject({ email: 'admin@wizardcld.com', id: expect.any(String) })
     })
 
     it('error', async () => {
-      const { access_token } = await loginAndGetTokens('admin@test.com', 'password')
+      const { access_token } = await loginAndGetTokens('admin@wizardcld.com', 'password')
 
       const response = await api.post(
         '/auth/change-password',
@@ -317,8 +317,8 @@ describe('AuthController (integration)', () => {
 
   describe('POST /auth/set-user-password', () => {
     it('success', async () => {
-      const { access_token } = await loginAndGetTokens('admin@test.com', 'password')
-      const user = await prisma.user.findFirst({ where: { email: 'admin@test.com' } })
+      const { access_token } = await loginAndGetTokens('admin@wizardcld.com', 'password')
+      const user = await prisma.user.findFirst({ where: { email: 'admin@wizardcld.com' } })
       expect(user).not.toBeNull()
 
       const response = await api.post(
@@ -332,7 +332,7 @@ describe('AuthController (integration)', () => {
     })
 
     it('error', async () => {
-      const { access_token } = await loginAndGetTokens('admin@test.com', 'password')
+      const { access_token } = await loginAndGetTokens('admin@wizardcld.com', 'password')
 
       const response = await api.post(
         '/auth/set-user-password',
@@ -346,7 +346,7 @@ describe('AuthController (integration)', () => {
 
   describe('POST /auth/forgot-password', () => {
     it('success', async () => {
-      const response = await api.post('/auth/forgot-password', { email: 'admin@test.com' })
+      const response = await api.post('/auth/forgot-password', { email: 'admin@wizardcld.com' })
 
       expect(response.status).toBe(201)
       expect(response.data).toMatchObject({ message: 'FORGOT_PASSWORD_EMAIL_SENT', success: true })
@@ -360,7 +360,7 @@ describe('AuthController (integration)', () => {
 
   describe('POST /auth/retry-forgot-password', () => {
     it('success', async () => {
-      const response = await api.post('/auth/retry-forgot-password', { email: 'admin@test.com' })
+      const response = await api.post('/auth/retry-forgot-password', { email: 'admin@wizardcld.com' })
 
       expect(response.status).toBe(201)
       expect(response.data).toMatchObject({ message: 'FORGOT_PASSWORD_EMAIL_RESENT', success: true })
@@ -374,7 +374,7 @@ describe('AuthController (integration)', () => {
 
   describe('POST /auth/verify-forgot-password', () => {
     it('success', async () => {
-      const email = 'admin@test.com'
+      const email = 'admin@wizardcld.com'
       const forgot = await api.post('/auth/forgot-password', { email })
       expect(forgot.status).toBe(201)
 
@@ -396,7 +396,7 @@ describe('AuthController (integration)', () => {
 
     it('error', async () => {
       const response = await api.post('/auth/verify-forgot-password', {
-        email: 'admin@test.com',
+        email: 'admin@wizardcld.com',
         password: 'RecoveredPassword123!@#',
         token: 'invalid-token'
       })
@@ -407,7 +407,7 @@ describe('AuthController (integration)', () => {
 
   describe('POST /auth/verify-forgot-password-code', () => {
     it('success', async () => {
-      const email = 'admin@test.com'
+      const email = 'admin@wizardcld.com'
       const forgot = await api.post('/auth/forgot-password', { email })
       expect(forgot.status).toBe(201)
 
@@ -428,7 +428,7 @@ describe('AuthController (integration)', () => {
 
     it('error', async () => {
       const response = await api.post('/auth/verify-forgot-password-code', {
-        email: 'admin@test.com',
+        email: 'admin@wizardcld.com',
         token: 'invalid-token'
       })
 
@@ -438,7 +438,7 @@ describe('AuthController (integration)', () => {
 
   describe('POST /auth/verify-user-password', () => {
     it('success', async () => {
-      const { access_token } = await loginAndGetTokens('admin@test.com', 'password')
+      const { access_token } = await loginAndGetTokens('admin@wizardcld.com', 'password')
 
       const response = await api.post(
         '/auth/verify-user-password',
@@ -458,12 +458,12 @@ describe('AuthController (integration)', () => {
 
   describe('GET /auth/user', () => {
     it('success', async () => {
-      const { access_token } = await loginAndGetTokens('admin@test.com', 'password')
+      const { access_token } = await loginAndGetTokens('admin@wizardcld.com', 'password')
 
       const response = await api.get('/auth/user', getAuthHeaders(access_token))
 
       expect(response.status).toBe(200)
-      expect(response.data).toMatchObject({ email: 'admin@test.com', roles: expect.arrayContaining(['user']) })
+      expect(response.data).toMatchObject({ email: 'admin@wizardcld.com', roles: expect.arrayContaining(['user']) })
     })
 
     it('error', async () => {
@@ -474,8 +474,8 @@ describe('AuthController (integration)', () => {
 
   describe('POST /auth/assign-role', () => {
     it('success', async () => {
-      const { access_token } = await loginAndGetTokens('admin@test.com', 'password')
-      const user = await prisma.user.findFirst({ where: { email: 'admin@test.com' } })
+      const { access_token } = await loginAndGetTokens('admin@wizardcld.com', 'password')
+      const user = await prisma.user.findFirst({ where: { email: 'admin@wizardcld.com' } })
       const role = await prisma.role.findFirst({ where: { name: RoleName.admin } })
       expect(user).not.toBeNull()
       expect(role).not.toBeNull()
@@ -491,8 +491,8 @@ describe('AuthController (integration)', () => {
     })
 
     it('error', async () => {
-      const { access_token } = await loginAndGetTokens('admin@test.com', 'password')
-      const user = await prisma.user.findFirst({ where: { email: 'admin@test.com' } })
+      const { access_token } = await loginAndGetTokens('admin@wizardcld.com', 'password')
+      const user = await prisma.user.findFirst({ where: { email: 'admin@wizardcld.com' } })
       expect(user).not.toBeNull()
 
       const response = await api.post(
@@ -507,8 +507,8 @@ describe('AuthController (integration)', () => {
 
   describe('POST /auth/revoke-role', () => {
     it('success', async () => {
-      const { access_token } = await loginAndGetTokens('admin@test.com', 'password')
-      const user = await prisma.user.findFirst({ where: { email: 'admin@test.com' } })
+      const { access_token } = await loginAndGetTokens('admin@wizardcld.com', 'password')
+      const user = await prisma.user.findFirst({ where: { email: 'admin@wizardcld.com' } })
       const role = await prisma.role.findFirst({ where: { name: RoleName.user } })
       expect(user).not.toBeNull()
       expect(role).not.toBeNull()
@@ -524,8 +524,8 @@ describe('AuthController (integration)', () => {
     })
 
     it('error', async () => {
-      const { access_token } = await loginAndGetTokens('admin@test.com', 'password')
-      const user = await prisma.user.findFirst({ where: { email: 'admin@test.com' } })
+      const { access_token } = await loginAndGetTokens('admin@wizardcld.com', 'password')
+      const user = await prisma.user.findFirst({ where: { email: 'admin@wizardcld.com' } })
       expect(user).not.toBeNull()
 
       const response = await api.post(

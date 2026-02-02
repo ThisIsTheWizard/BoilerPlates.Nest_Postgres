@@ -70,7 +70,7 @@ export class UserService {
     const users = await this.prismaService.user.createManyAndReturn({
       data: [
         {
-          email: 'admin@test.com',
+          email: 'admin@wizardcld.com',
           first_name: 'Test',
           last_name: 'User 1',
           password: hashedPassword,
