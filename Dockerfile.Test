@@ -9,14 +9,12 @@ WORKDIR /app
 
 COPY package.json .
 
-RUN npm i -g pnpm
-
-RUN pnpm i
+RUN npm i -g pnpm && pnpm i
 
 COPY . .
 
-RUN pnpm run nest:build
+RUN pnpm db:generate && pnpm run nest:build
 
-CMD ["sh", "-c", "pnpm db:generate && pnpm db:push && pnpm nest:dev"]
+CMD ["sh", "-c", "pnpm db:push && pnpm nest:start"]
 
 EXPOSE 8000

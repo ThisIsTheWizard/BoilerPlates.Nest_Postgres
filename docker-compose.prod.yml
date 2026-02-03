@@ -40,9 +40,6 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-    volumes:
-      - node_server_data:/app
-      - /app/node_modules
 
 volumes:
   node_server_data:

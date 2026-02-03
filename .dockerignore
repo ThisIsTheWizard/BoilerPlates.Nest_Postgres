@@ -1,13 +1,9 @@
-Dockerfile
-Dockerfile.*
-.dockerignore
 node_modules
 npm-debug.log
 README.md
 dist
 build
 coverage
-test
 .git
 .gitignore
 .DS_Store
